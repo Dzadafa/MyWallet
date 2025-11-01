@@ -47,7 +47,7 @@ class WishlistFragment : Fragment() {
     private fun setupRecyclerView() {
         
         wishlistAdapter = WishlistAdapter { wishlistItem ->
-            viewModel.deleteWishlistItem(wishlistItem)
+            viewModel.toggleItemCompleted(wishlistItem)
         }
         binding.rvWishlist.apply {
             layoutManager = LinearLayoutManager(context)
