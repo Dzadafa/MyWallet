@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="330dp"
+    android:minHeight="55dp"
+    android:previewImage="@drawable/widget_stats_info_preview"
+    android:resizeMode="none"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="60000"
+    android:widgetCategory="home_screen"
+    android:initialLayout="@layout/widget_stats">
+</appwidget-provider>
