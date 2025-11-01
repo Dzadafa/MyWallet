@@ -1,5 +1,6 @@
 package com.dzadafa.mywallet.ui.transactions
 
+import android.content.Intent
 import android.app.DatePickerDialog
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -16,6 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.adapter.TransactionAdapter
 import com.dzadafa.mywallet.databinding.FragmentTransactionsBinding
+import com.dzadafa.mywallet.data.Transaction
+import com.dzadafa.mywallet.ui.edit.EditTransactionActivity
 
 class TransactionsFragment : Fragment() {
 
@@ -75,17 +78,25 @@ class TransactionsFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        incomeAdapter = TransactionAdapter { transaction ->
-            viewModel.deleteTransaction(transaction)
+        val editClickListener = { transaction: Transaction ->
+            val intent = Intent(requireContext(), EditTransactionActivity::class.java)
+            intent.putExtra("TRANSACTION_ID", transaction.id)
+            startActivity(intent)
         }
+
+        incomeAdapter = TransactionAdapter(
+            onDeleteClicked = { viewModel.deleteTransaction(it) },
+            onEditClicked = editClickListener 
+        )
         binding.rvIncome.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = incomeAdapter
         }
 
-        expenseAdapter = TransactionAdapter { transaction ->
-            viewModel.deleteTransaction(transaction)
-        }
+        expenseAdapter = TransactionAdapter(
+            onDeleteClicked = { viewModel.deleteTransaction(it) },
+            onEditClicked = editClickListener 
+        )
         binding.rvExpenses.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = expenseAdapter

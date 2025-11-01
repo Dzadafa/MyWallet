@@ -66,6 +66,11 @@
             android:name=".widget.WidgetAddTransactionActivity"
             android:exported="false"
             android:theme="@style/Theme.MyWallet"> </activity>
+          
+        <activity
+            android:name=".ui.edit.EditTransactionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyWallet.NoActionBar"> </activity>
 
         </application>
 </manifest>
