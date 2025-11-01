@@ -1,6 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Base.Theme.MyWallet" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        </style>
+  <style name="Base.Theme.MyWallet" parent="Theme.MaterialComponents.DayNight.NoActionBar"> 
+  </style>
 
     <style name="Theme.MyWallet" parent="Base.Theme.MyWallet" />
+    
+    <style name="Theme.MyWallet.NoActionBar" parent="Theme.MyWallet">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>
