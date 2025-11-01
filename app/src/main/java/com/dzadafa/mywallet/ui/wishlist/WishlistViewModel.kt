@@ -102,8 +102,9 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
         }
         
         _analyzedWishlist.value = analysisList.sortedWith(
-            compareBy<WishlistItemAnalysis> { it.item.completed }
-                .thenBy { it.item.price }
+            compareBy<WishlistItemAnalysis> { it.item.completed }  
+                .thenByDescending { it.canAfford }
+                .thenBy { it.item.price }  
         )
 
         saveDataToPreferences(analysisList)
