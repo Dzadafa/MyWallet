@@ -1,6 +1,9 @@
 package com.dzadafa.mywallet.adapter
 
+import android.graphics.Color
+import android.graphics.Paint
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -19,28 +22,49 @@ data class WishlistItemAnalysis(
 )
 
 class WishlistAdapter(
-    private val onDeleteClicked: (WishlistItem) -> Unit
+    private val onToggleCompleted: (WishlistItem) -> Unit
 ) : ListAdapter<WishlistItemAnalysis, WishlistAdapter.WishlistViewHolder>(WishlistDiffCallback) {
 
     inner class WishlistViewHolder(private val binding: ItemWishlistBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        
+
         fun bind(analysis: WishlistItemAnalysis) {
             val item = analysis.item
             binding.tvItemName.text = item.name
             binding.tvItemPrice.text = Utils.formatAsRupiah(item.price)
-
             binding.tvAffordability.text = analysis.affordabilityMessage
-            
-            val colorRes = when {
-                analysis.canAfford -> R.color.income_green
-                analysis.isBudgetNegative -> R.color.expense_red
-                else -> R.color.text_default_color
-            }
-            binding.tvAffordability.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
 
-            binding.ivDelete.setOnClickListener {
-                onDeleteClicked(item)
+            if (item.completed) {
+
+                binding.tvItemName.paintFlags = binding.tvItemName.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+
+                binding.tvAffordability.visibility = View.GONE
+
+                binding.tvItemName.setTextColor(Color.GRAY)
+                binding.tvItemPrice.setTextColor(Color.GRAY)
+            } else {
+
+                binding.tvItemName.paintFlags = binding.tvItemName.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+
+                binding.tvAffordability.visibility = View.VISIBLE
+
+                binding.tvItemName.setTextColor(ContextCompat.getColor(itemView.context, R.color.widget_text_color))
+                binding.tvItemPrice.setTextColor(ContextCompat.getColor(itemView.context, R.color.widget_text_color))
+
+                val colorRes = when {
+                    analysis.canAfford -> R.color.income_green
+                    analysis.isBudgetNegative -> R.color.expense_red
+                    else -> R.color.widget_text_color
+                }
+                binding.tvAffordability.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
+            }
+
+            binding.cbCompleted.isChecked = item.completed
+
+            binding.cbCompleted.setOnClickListener {
+                onToggleCompleted(item)
             }
         }
     }
