@@ -1,5 +1,10 @@
 package com.dzadafa.mywallet.ui.transactions
 
+import android.app.DatePickerDialog
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +26,8 @@ class TransactionsFragment : Fragment() {
 
     private lateinit var incomeAdapter: TransactionAdapter
     private lateinit var expenseAdapter: TransactionAdapter
+    private val selectedDate = Calendar.getInstance()
+    private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,14 +38,40 @@ class TransactionsFragment : Fragment() {
         val root: View = binding.root
 
         setupRecyclerViews()
+        setupObservers()
 
         binding.btnAddTransaction.setOnClickListener {
             addTransaction()
         }
 
-        setupObservers()
+        setupDatePicker()
 
         return root
+    }
+
+    private fun setupDatePicker() {
+        updateDateEditText()
+
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+            selectedDate.set(Calendar.YEAR, year)
+            selectedDate.set(Calendar.MONTH, month)
+            selectedDate.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            updateDateEditText()
+        }
+
+        binding.etDate.setOnClickListener {
+            DatePickerDialog(
+                requireContext(),
+                dateSetListener,
+                selectedDate.get(Calendar.YEAR),
+                selectedDate.get(Calendar.MONTH),
+                selectedDate.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+    }
+    
+    private fun updateDateEditText() {
+        binding.etDate.setText(displayDateFormat.format(selectedDate.time))
     }
 
     private fun setupRecyclerViews() {
@@ -80,8 +113,9 @@ class TransactionsFragment : Fragment() {
 
         val selectedTypeId = binding.rgType.checkedRadioButtonId
         val type = if (selectedTypeId == R.id.rb_income) "income" else "expense"
+        val date = Timestamp(selectedDate.time)
 
-        viewModel.addTransaction(type, description, amount, category)
+        viewModel.addTransaction(type, description, amount, category, date)
 
         clearForm()
     }
@@ -90,7 +124,9 @@ class TransactionsFragment : Fragment() {
         binding.etDescription.text?.clear()
         binding.etAmount.text?.clear()
         binding.etCategory.text?.clear()
-        binding.rbExpense.isChecked = true 
+        binding.rbExpense.isChecked = true
+        selectedDate.timeInMillis = System.currentTimeMillis()
+        updateDateEditText()
     }
 
     override fun onDestroyView() {

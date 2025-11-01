@@ -43,7 +43,7 @@ class TransactionsViewModel : ViewModel() {
         val collectionPath = "users/$currentUserId/transactions"
 
         db.collection(collectionPath)
-            .orderBy("date", Query.Direction.DESCENDING) // Newest first
+            .orderBy("date", Query.Direction.DESCENDING) 
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     _toastMessage.value = "Error loading data: ${error.message}"
@@ -60,7 +60,7 @@ class TransactionsViewModel : ViewModel() {
             }
     }
 
-    fun addTransaction(type: String, description: String, amountStr: String, category: String) {
+    fun addTransaction(type: String, description: String, amountStr: String, category: String, date: Timestamp  ) {
         if (currentUserId == null) {
             _toastMessage.value = "Error: Not logged in"
             return
@@ -84,15 +84,15 @@ class TransactionsViewModel : ViewModel() {
             type = type,
             description = description,
             amount = amount,
-            category = category.replaceFirstChar { it.uppercase() }, // Capitalize category
-            date = Timestamp.now()
+            category = category.replaceFirstChar { it.uppercase() }, 
+            date = date
         )
 
         viewModelScope.launch {
             try {
                 db.collection("users/$currentUserId/transactions")
                     .add(newTransaction)
-                    .await() // .await() comes from kotlinx-coroutines-play-services
+                    .await() 
                 _toastMessage.value = "Transaction added!"
             } catch (e: Exception) {
                 _toastMessage.value = "Error adding transaction: ${e.message}"
