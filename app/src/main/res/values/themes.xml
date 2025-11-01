@@ -1,0 +1,6 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.MyWallet" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        </style>
+
+    <style name="Theme.MyWallet" parent="Base.Theme.MyWallet" />
+</resources>
