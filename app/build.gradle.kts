@@ -50,29 +50,23 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Firebase (Hardcoded as per the guide)
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     
-    // --- THIS IS THE FIX ---
-    // Remove the "-ktx" from these two lines
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
 
-    // Navigation (from TOML file)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // ViewModel & LiveData (from TOML file)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
 
-    // Coroutines (from TOML file)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     // implementation(libs.kotlinx.coroutines.play.services)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
-    // Charting Library (from TOML file)
     implementation(libs.mpandroidchart)
  }
