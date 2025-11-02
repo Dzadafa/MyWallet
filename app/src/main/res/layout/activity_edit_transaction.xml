@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:title="Edit Transaction"
-            app:titleTextColor="?attr/colorOnPrimary" />
+            app:titleTextColor="@color/text_default_color" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <RadioGroup

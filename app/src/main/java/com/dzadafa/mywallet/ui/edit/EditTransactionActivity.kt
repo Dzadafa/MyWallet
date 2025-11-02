@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.databinding.ActivityEditTransactionBinding
@@ -12,7 +13,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -57,7 +57,7 @@ class EditTransactionActivity : AppCompatActivity() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId == null || transactionId == null) return
 
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val doc = db.collection("users/$userId/transactions")
                     .document(transactionId!!)
@@ -141,23 +141,20 @@ class EditTransactionActivity : AppCompatActivity() {
             "date" to date
         )
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                db.collection("users/$userId/transactions")
-                    .document(transactionId!!)
-                    .update(updatedData)
-                    .await()
-                
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditTransactionActivity, "Changes saved!", Toast.LENGTH_SHORT).show()
-                    finish() 
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditTransactionActivity, "Failed to save: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+        binding.btnSaveChanges.isEnabled = false
+        binding.btnSaveChanges.text = "Saving..."
+
+        db.collection("users/$userId/transactions")
+            .document(transactionId!!)
+            .update(updatedData)
+            .addOnSuccessListener {
+                finish()
             }
-        }
+            .addOnFailureListener { e ->
+                binding.btnSaveChanges.isEnabled = true
+                binding.btnSaveChanges.text = "Save Changes"
+                finish()
+            }
     }
 
     override fun onSupportNavigateUp(): Boolean {
