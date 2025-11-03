@@ -3,69 +3,27 @@ package com.dzadafa.mywallet.ui.transactions
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.data.Transaction
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
+import com.dzadafa.mywallet.data.TransactionRepository
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import java.util.Date
 
-class TransactionsViewModel : ViewModel() {
+class TransactionsViewModel(private val repository: TransactionRepository) : ViewModel() {
 
-    private val db: FirebaseFirestore = Firebase.firestore
-    private val currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
+    val incomeList: LiveData<List<Transaction>> = repository.allTransactions
+        .asLiveData()
+        .mapTransactions(TransactionType.INCOME)
 
-    private val _allTransactions = MutableLiveData<List<Transaction>>()
-
-    private val _incomeList = MutableLiveData<List<Transaction>>()
-    val incomeList: LiveData<List<Transaction>> = _incomeList
-
-    private val _expenseList = MutableLiveData<List<Transaction>>()
-    val expenseList: LiveData<List<Transaction>> = _expenseList
+    val expenseList: LiveData<List<Transaction>> = repository.allTransactions
+        .asLiveData()
+        .mapTransactions(TransactionType.EXPENSE)
 
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
 
-    init {
-        loadAllTransactions()
-    }
-
-    private fun loadAllTransactions() {
-        if (currentUserId == null) {
-            _toastMessage.value = "User not logged in"
-            return
-        }
-
-        val collectionPath = "users/$currentUserId/transactions"
-
-        db.collection(collectionPath)
-            .orderBy("date", Query.Direction.DESCENDING) 
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    _toastMessage.value = "Error loading data: ${error.message}"
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val transactions = snapshot.toObjects(Transaction::class.java)
-                    _allTransactions.value = transactions
-                    
-                    _incomeList.value = transactions.filter { it.type == "income" }
-                    _expenseList.value = transactions.filter { it.type == "expense" }
-                }
-            }
-    }
-
-    fun addTransaction(type: String, description: String, amountStr: String, category: String, date: Timestamp  ) {
-        if (currentUserId == null) {
-            _toastMessage.value = "Error: Not logged in"
-            return
-        }
-        
+    fun addTransaction(type: String, description: String, amountStr: String, category: String, date: Date) {
         if (description.isBlank()) {
             _toastMessage.value = "Please enter a description"
             return
@@ -84,38 +42,31 @@ class TransactionsViewModel : ViewModel() {
             type = type,
             description = description,
             amount = amount,
-            category = category.replaceFirstChar { it.uppercase() }, 
+            category = category.replaceFirstChar { it.uppercase() },
             date = date
         )
 
         viewModelScope.launch {
-            try {
-                db.collection("users/$currentUserId/transactions")
-                    .add(newTransaction)
-                    .await() 
-                _toastMessage.value = "Transaction added!"
-            } catch (e: Exception) {
-                _toastMessage.value = "Error adding transaction: ${e.message}"
-            }
+            repository.insert(newTransaction)
+            _toastMessage.postValue("Transaction added!")
         }
     }
 
     fun deleteTransaction(transaction: Transaction) {
-        if (currentUserId == null || transaction.id == null) {
-            _toastMessage.value = "Error: Cannot delete"
-            return
-        }
-
         viewModelScope.launch {
-            try {
-                db.collection("users/$currentUserId/transactions")
-                    .document(transaction.id)
-                    .delete()
-                    .await() // .await() comes from kotlinx-coroutines-play-services
-                _toastMessage.value = "Transaction deleted"
-            } catch (e: Exception) {
-                _toastMessage.value = "Error deleting: ${e.message}"
-            }
+            repository.delete(transaction)
+            _toastMessage.postValue("Transaction deleted")
         }
+    }
+
+    // --- HELPER FUNCTIONS MOVED INSIDE THE CLASS ---
+    private enum class TransactionType { INCOME, EXPENSE }
+
+    private fun LiveData<List<Transaction>>.mapTransactions(type: TransactionType): LiveData<List<Transaction>> {
+        val result = MutableLiveData<List<Transaction>>()
+        this.observeForever { transactions ->
+            result.value = transactions.filter { it.type == type.name.lowercase() }
+        }
+        return result
     }
 }

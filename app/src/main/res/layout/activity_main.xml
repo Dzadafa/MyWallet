@@ -29,20 +29,6 @@
                 android:textColor="@color/text_default_color"
                 android:background="?attr/colorPrimary" />
 
-            <TextView
-                android:id="@+id/tv_user_id"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:paddingStart="8dp"
-                android:paddingEnd="16dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="?attr/colorOnPrimary"
-                android:textSize="12sp"
-                android:background="?attr/colorPrimary"
-                tools:text="User ID: 12345..."/>
-
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>

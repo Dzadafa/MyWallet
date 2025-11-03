@@ -5,30 +5,23 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import com.dzadafa.mywallet.data.Transaction
-import com.dzadafa.mywallet.utils.Utils 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
+import com.dzadafa.mywallet.data.TransactionRepository
+import com.dzadafa.mywallet.utils.Utils
 import java.util.Calendar
 import java.util.Date
 
-
 enum class TimeFilter { ALL_TIME, THIS_MONTH, THIS_YEAR }
 
-class DashboardViewModel(application: Application) : AndroidViewModel(application) {
+class DashboardViewModel(
+    private val repository: TransactionRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
-    private val db: FirebaseFirestore = Firebase.firestore
-    private val currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
-
-    
-    private val _allTransactions = MutableLiveData<List<Transaction>>()
-
-    
+    private val allTransactions: LiveData<List<Transaction>> = repository.allTransactions.asLiveData()
     private val _timeFilter = MutableLiveData(TimeFilter.ALL_TIME)
 
-    
     private val _currentBalance = MutableLiveData<Double>()
     val currentBalance: LiveData<Double> = _currentBalance
 
@@ -42,17 +35,8 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val expenseBreakdown: LiveData<Map<String, Double>> = _expenseBreakdown
 
     init {
-        loadAllTransactions()
-        _allTransactions.observeForever { updateDashboardData() }
+        allTransactions.observeForever { updateDashboardData() }
         _timeFilter.observeForever { updateDashboardData() }
-    }
-
-    private fun loadAllTransactions() {
-        if (currentUserId == null) return
-        val path = "users/$currentUserId/transactions"
-        db.collection(path).addSnapshotListener { snapshot, _ ->
-            _allTransactions.value = snapshot?.toObjects(Transaction::class.java) ?: emptyList()
-        }
     }
 
     fun setFilter(filter: TimeFilter) {
@@ -60,35 +44,29 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun updateDashboardData() {
-        val allTransactions = _allTransactions.value ?: emptyList()
+        val allTransactions = allTransactions.value ?: emptyList()
         val filter = _timeFilter.value ?: TimeFilter.ALL_TIME
 
-        
         val totalIncomeAllTime = allTransactions.filter { it.type == "income" }.sumOf { it.amount }
         val totalExpenseAllTime = allTransactions.filter { it.type == "expense" }.sumOf { it.amount }
-        val currentBalanceValue = totalIncomeAllTime - totalExpenseAllTime 
+        val currentBalanceValue = totalIncomeAllTime - totalExpenseAllTime
         _currentBalance.value = currentBalanceValue
 
-        
         val filteredTransactions = getFilteredTransactions(allTransactions, filter)
 
-        
-        val filteredIncomeValue = filteredTransactions 
+        val filteredIncomeValue = filteredTransactions
             .filter { it.type == "income" }
             .sumOf { it.amount }
         _totalIncome.value = filteredIncomeValue
 
-        val filteredExpensesList = filteredTransactions.filter { it.type == "expense" } 
-        val filteredExpenseValue = filteredExpensesList.sumOf { it.amount } 
+        val filteredExpensesList = filteredTransactions.filter { it.type == "expense" }
+        val filteredExpenseValue = filteredExpensesList.sumOf { it.amount }
         _totalExpense.value = filteredExpenseValue
 
-        
-        _expenseBreakdown.value = filteredExpensesList 
+        _expenseBreakdown.value = filteredExpensesList
             .groupBy { it.category }
             .mapValues { (_, txns) -> txns.sumOf { it.amount } }
 
-        
-        
         saveDataToPreferences(currentBalanceValue, filteredIncomeValue, filteredExpenseValue)
     }
 
@@ -124,12 +102,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
                 cal.time
             }
-            TimeFilter.ALL_TIME -> now 
+            TimeFilter.ALL_TIME -> now
         }
 
         return transactions.filter {
-            
-            it.date.toDate().after(startTime) || it.date.toDate() == startTime
+            it.date.after(startTime) || it.date == startTime
         }
     }
 }

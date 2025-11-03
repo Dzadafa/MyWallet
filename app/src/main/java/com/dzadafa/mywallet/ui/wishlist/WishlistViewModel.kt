@@ -5,25 +5,25 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.adapter.WishlistItemAnalysis
 import com.dzadafa.mywallet.data.Transaction
+import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.data.WishlistItem
+import com.dzadafa.mywallet.data.WishlistRepository
 import com.dzadafa.mywallet.utils.Utils
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.Date
 import kotlin.math.ceil
 
-class WishlistViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val db: FirebaseFirestore = Firebase.firestore
-    private val currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
+class WishlistViewModel(
+    private val transactionRepository: TransactionRepository,
+    private val wishlistRepository: WishlistRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _analyzedWishlist = MutableLiveData<List<WishlistItemAnalysis>>()
     val analyzedWishlist: LiveData<List<WishlistItemAnalysis>> = _analyzedWishlist
@@ -31,35 +31,17 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
 
-    private val _allTransactions = MutableLiveData<List<Transaction>>()
-    private val _allWishlistItems = MutableLiveData<List<WishlistItem>>()
+    private val allTransactions: LiveData<List<Transaction>> = transactionRepository.allTransactions.asLiveData()
+    private val allWishlistItems: LiveData<List<WishlistItem>> = wishlistRepository.allWishlistItems.asLiveData()
 
     init {
-        loadAllTransactions()
-        loadWishlistItems()
-        _allTransactions.observeForever { runAnalysis() }
-        _allWishlistItems.observeForever { runAnalysis() }
-    }
-
-    private fun loadAllTransactions() {
-        if (currentUserId == null) return
-        val path = "users/$currentUserId/transactions"
-        db.collection(path).addSnapshotListener { snapshot, _ ->
-            _allTransactions.value = snapshot?.toObjects(Transaction::class.java) ?: emptyList()
-        }
-    }
-
-    private fun loadWishlistItems() {
-        if (currentUserId == null) return
-        val path = "users/$currentUserId/wishlist"
-        db.collection(path).addSnapshotListener { snapshot, _ ->
-            _allWishlistItems.value = snapshot?.toObjects(WishlistItem::class.java) ?: emptyList()
-        }
+        allTransactions.observeForever { runAnalysis() }
+        allWishlistItems.observeForever { runAnalysis() }
     }
 
     private fun runAnalysis() {
-        val transactions = _allTransactions.value ?: emptyList()
-        val wishlistItems = _allWishlistItems.value ?: emptyList()
+        val transactions = allTransactions.value ?: emptyList()
+        val wishlistItems = allWishlistItems.value ?: emptyList()
 
         if (wishlistItems.isEmpty()) {
             _analyzedWishlist.value = emptyList()
@@ -100,11 +82,11 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
                 isBudgetNegative = budgetNegative
             )
         }
-        
+
         _analyzedWishlist.value = analysisList.sortedWith(
-            compareBy<WishlistItemAnalysis> { it.item.completed }  
+            compareBy<WishlistItemAnalysis> { it.item.completed }
                 .thenByDescending { it.canAfford }
-                .thenBy { it.item.price }  
+                .thenBy { it.item.price }
         )
 
         saveDataToPreferences(analysisList)
@@ -142,7 +124,7 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
         if (transactions.isEmpty()) return Pair(0.0, false)
         val monthlySummary = transactions.groupBy {
             val cal = Calendar.getInstance()
-            cal.time = it.date.toDate()
+            cal.time = it.date
             "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}"
         }
         val currentMonthKey = "${Calendar.getInstance().get(Calendar.YEAR)}-${Calendar.getInstance().get(Calendar.MONTH)}"
@@ -162,9 +144,7 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
         return Pair(averageSavings, averageSavings <= 0)
     }
 
-
     fun addWishlistItem(name: String, priceStr: String) {
-        if (currentUserId == null) return
         if (name.isBlank()) {
             _toastMessage.value = "Please enter an item name"
             return
@@ -175,40 +155,20 @@ class WishlistViewModel(application: Application) : AndroidViewModel(application
             return
         }
 
-        val newItem = WishlistItem(name = name, price = price, completed = false) // Set default
+        val newItem = WishlistItem(name = name, price = price, completed = false)
 
         viewModelScope.launch {
-            try {
-                db.collection("users/$currentUserId/wishlist")
-                    .add(newItem)
-                    .await()
-                _toastMessage.value = "Item added to wishlist!"
-            } catch (e: Exception) {
-                _toastMessage.value = "Error: ${e.message}"
-            }
+            wishlistRepository.insert(newItem)
+            _toastMessage.postValue("Item added to wishlist!")
         }
     }
 
     fun toggleItemCompleted(item: WishlistItem) {
-        if (currentUserId == null || item.id == null) {
-            _toastMessage.value = "Error: Cannot update item"
-            return
-        }
-        
-        val newCompletedStatus = !item.completed
-
+        val updatedItem = item.copy(completed = !item.completed)
         viewModelScope.launch {
-            try {
-                db.collection("users/$currentUserId/wishlist")
-                    .document(item.id)
-                    .update("completed", newCompletedStatus) 
-                    .await()
-                
-                val toastMessage = if (newCompletedStatus) "Goal achieved!" else "Goal restored"
-                _toastMessage.value = toastMessage
-            } catch (e: Exception) {
-                _toastMessage.value = "Error: ${e.message}"
-            }
+            wishlistRepository.update(updatedItem)
+            val toastMessage = if (updatedItem.completed) "Goal achieved!" else "Goal restored"
+            _toastMessage.postValue(toastMessage)
         }
     }
 }
