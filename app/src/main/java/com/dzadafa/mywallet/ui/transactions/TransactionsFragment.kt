@@ -1,11 +1,7 @@
 package com.dzadafa.mywallet.ui.transactions
 
-import android.content.Intent
 import android.app.DatePickerDialog
-import com.google.firebase.Timestamp
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,21 +10,34 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.dzadafa.mywallet.MyWalletApplication
+import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.adapter.TransactionAdapter
-import com.dzadafa.mywallet.databinding.FragmentTransactionsBinding
 import com.dzadafa.mywallet.data.Transaction
+import com.dzadafa.mywallet.databinding.FragmentTransactionsBinding
 import com.dzadafa.mywallet.ui.edit.EditTransactionActivity
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class TransactionsFragment : Fragment() {
 
     private var _binding: FragmentTransactionsBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: TransactionsViewModel by viewModels()
-
+    
+    private val viewModel: TransactionsViewModel by viewModels {
+        MyWalletViewModelFactory(
+            (requireActivity().application as MyWalletApplication).transactionRepository,
+            (requireActivity().application as MyWalletApplication).wishlistRepository,
+            (requireActivity().application as MyWalletApplication)
+        )
+    }
+    
     private lateinit var incomeAdapter: TransactionAdapter
     private lateinit var expenseAdapter: TransactionAdapter
+    
     private val selectedDate = Calendar.getInstance()
     private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
@@ -46,12 +55,12 @@ class TransactionsFragment : Fragment() {
         binding.btnAddTransaction.setOnClickListener {
             addTransaction()
         }
-
+        
         setupDatePicker()
 
         return root
     }
-
+    
     private fun setupDatePicker() {
         updateDateEditText()
 
@@ -78,15 +87,15 @@ class TransactionsFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        val editClickListener = { transaction: Transaction ->
+        val editClickListener = { transactionId: Int ->
             val intent = Intent(requireContext(), EditTransactionActivity::class.java)
-            intent.putExtra("TRANSACTION_ID", transaction.id)
+            intent.putExtra("TRANSACTION_ID", transactionId)
             startActivity(intent)
         }
 
         incomeAdapter = TransactionAdapter(
             onDeleteClicked = { viewModel.deleteTransaction(it) },
-            onEditClicked = editClickListener 
+            onEditClicked = editClickListener
         )
         binding.rvIncome.apply {
             layoutManager = LinearLayoutManager(context)
@@ -95,7 +104,7 @@ class TransactionsFragment : Fragment() {
 
         expenseAdapter = TransactionAdapter(
             onDeleteClicked = { viewModel.deleteTransaction(it) },
-            onEditClicked = editClickListener 
+            onEditClicked = editClickListener
         )
         binding.rvExpenses.apply {
             layoutManager = LinearLayoutManager(context)
@@ -121,10 +130,9 @@ class TransactionsFragment : Fragment() {
         val description = binding.etDescription.text.toString()
         val amount = binding.etAmount.text.toString()
         val category = binding.etCategory.text.toString()
-
         val selectedTypeId = binding.rgType.checkedRadioButtonId
         val type = if (selectedTypeId == R.id.rb_income) "income" else "expense"
-        val date = Timestamp(selectedDate.time)
+        val date: Date = selectedDate.time
 
         viewModel.addTransaction(type, description, amount, category, date)
 

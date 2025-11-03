@@ -27,7 +27,7 @@ class WishlistAdapter(
 
     inner class WishlistViewHolder(private val binding: ItemWishlistBinding) :
         RecyclerView.ViewHolder(binding.root) {
-
+        
         fun bind(analysis: WishlistItemAnalysis) {
             val item = analysis.item
             binding.tvItemName.text = item.name
@@ -35,21 +35,16 @@ class WishlistAdapter(
             binding.tvAffordability.text = analysis.affordabilityMessage
 
             if (item.completed) {
-
                 binding.tvItemName.paintFlags = binding.tvItemName.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-
                 binding.tvAffordability.visibility = View.GONE
-
                 binding.tvItemName.setTextColor(Color.GRAY)
                 binding.tvItemPrice.setTextColor(Color.GRAY)
             } else {
-
                 binding.tvItemName.paintFlags = binding.tvItemName.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-
                 binding.tvAffordability.visibility = View.VISIBLE
-
+                
                 binding.tvItemName.setTextColor(ContextCompat.getColor(itemView.context, R.color.widget_text_color))
                 binding.tvItemPrice.setTextColor(ContextCompat.getColor(itemView.context, R.color.widget_text_color))
 
@@ -62,7 +57,7 @@ class WishlistAdapter(
             }
 
             binding.cbCompleted.isChecked = item.completed
-
+            
             binding.cbCompleted.setOnClickListener {
                 onToggleCompleted(item)
             }

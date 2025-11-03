@@ -15,7 +15,7 @@ import com.dzadafa.mywallet.utils.Utils
 
 class TransactionAdapter(
     private val onDeleteClicked: (Transaction) -> Unit,
-    private val onEditClicked: (Transaction) -> Unit
+    private val onEditClicked: (Int) -> Unit
 ) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDiffCallback) {
 
     inner class TransactionViewHolder(private val binding: ItemTransactionBinding) :
@@ -24,7 +24,7 @@ class TransactionAdapter(
         fun bind(transaction: Transaction) {
             binding.tvDescription.text = transaction.description
             binding.tvCategory.text = transaction.category
-            binding.tvDate.text = Utils.formatTimestamp(transaction.date)
+            binding.tvDate.text = Utils.formatDate(transaction.date)
             binding.tvAmount.text = Utils.formatAsRupiah(transaction.amount)
 
             val colorRes = if (transaction.type == "income") {
@@ -33,13 +33,13 @@ class TransactionAdapter(
                 R.color.expense_red
             }
             binding.tvAmount.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
-            
+
             binding.ivDelete.setOnClickListener {
                 onDeleteClicked(transaction)
             }
 
             itemView.setOnClickListener {
-                onEditClicked(transaction)
+                onEditClicked(transaction.id)
             }
         }
     }
@@ -52,6 +52,7 @@ class TransactionAdapter(
         )
         return TransactionViewHolder(binding)
     }
+
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
