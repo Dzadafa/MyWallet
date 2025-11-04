@@ -37,4 +37,8 @@
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="system_default">System Default</string>
+    <string name="widget_wishlist_label">Wishlist Overview</string>
+    <string name="widget_stats_label">Budget Summary</string>
+    <string name="widget_quickadd_label">Quick Add Transaction</string>
+
 </resources>

@@ -1,5 +1,6 @@
 package com.dzadafa.mywallet.widget
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
@@ -49,19 +50,28 @@ class WishlistRemoteViewsFactory(
             setTextViewText(R.id.tv_widget_item_name, item.name)
             setTextViewText(R.id.tv_widget_item_price, Utils.formatAsRupiah(item.price))
 
-            if (item.completed) {
-                setInt(
-                    R.id.tv_widget_item_name,
-                    "setPaintFlags",
-                    Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG
-                )
+            val iconRes = if (item.completed) R.drawable.ic_check_box else R.drawable.ic_check_box_outline
+            setImageViewResource(R.id.iv_widget_check, iconRes)
+
+            val paintFlags = if (item.completed) {
+                Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG
             } else {
-                setInt(
-                    R.id.tv_widget_item_name,
-                    "setPaintFlags",
-                    Paint.ANTI_ALIAS_FLAG
-                )
+                Paint.ANTI_ALIAS_FLAG
             }
+            setInt(R.id.tv_widget_item_name, "setPaintFlags", paintFlags)
+            
+            val fillInIntent = Intent().apply {
+                action = WishlistToggleReceiver.ACTION_TOGGLE_ITEM
+                putExtra(WishlistToggleReceiver.EXTRA_ITEM_ID, item.id)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                item.id, 
+                fillInIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            setOnClickPendingIntent(R.id.iv_widget_check, pendingIntent)
         }
         
         return views
