@@ -1,5 +1,6 @@
 package com.dzadafa.mywallet.ui.wishlist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import com.dzadafa.mywallet.MyWalletApplication
 import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.adapter.WishlistAdapter
 import com.dzadafa.mywallet.databinding.FragmentWishlistBinding
+import com.dzadafa.mywallet.ui.edit.EditWishlistActivity
 
 class WishlistFragment : Fragment() {
 
@@ -47,9 +49,16 @@ class WishlistFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        wishlistAdapter = WishlistAdapter { wishlistItem ->
-            viewModel.toggleItemCompleted(wishlistItem)
+        val editClickListener = { itemId: Int ->
+            val intent = Intent(requireContext(), EditWishlistActivity::class.java)
+            intent.putExtra("WISHLIST_ITEM_ID", itemId)
+            startActivity(intent)
         }
+        
+        wishlistAdapter = WishlistAdapter(
+            onToggleCompleted = { viewModel.toggleItemCompleted(it) },
+            onEditClicked = editClickListener
+        )
         binding.rvWishlist.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = wishlistAdapter

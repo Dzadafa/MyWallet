@@ -84,5 +84,10 @@
             android:exported="false"
             android:theme="@style/Theme.MyWallet.NoActionBar"> </activity>
 
+        <activity
+            android:name=".ui.edit.EditWishlistActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyWallet.NoActionBar" />
+
         </application>
 </manifest>
