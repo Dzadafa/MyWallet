@@ -1,7 +1,10 @@
 package com.dzadafa.mywallet.ui.wishlist
 
 import android.app.Application
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,6 +16,7 @@ import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.data.WishlistItem
 import com.dzadafa.mywallet.data.WishlistRepository
 import com.dzadafa.mywallet.utils.Utils
+import com.dzadafa.mywallet.widget.WishlistWidgetProvider
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -160,6 +164,7 @@ class WishlistViewModel(
         viewModelScope.launch {
             wishlistRepository.insert(newItem)
             _toastMessage.postValue("Item added to wishlist!")
+            notifyWidgetDataChanged()
         }
     }
 
@@ -169,6 +174,18 @@ class WishlistViewModel(
             wishlistRepository.update(updatedItem)
             val toastMessage = if (updatedItem.completed) "Goal achieved!" else "Goal restored"
             _toastMessage.postValue(toastMessage)
+            notifyWidgetDataChanged()
         }
+    }
+
+    private fun notifyWidgetDataChanged() {
+        val context = getApplication<Application>().applicationContext
+        val intent = Intent(context, WishlistWidgetProvider::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            val ids = AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(context.packageName.let { ComponentName(it, WishlistWidgetProvider::class.java.name) })
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        context.sendBroadcast(intent)
     }
 }
