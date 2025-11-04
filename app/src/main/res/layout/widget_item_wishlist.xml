@@ -3,24 +3,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <TextView
-        android:id="@+id/tv_widget_item_name"
+    <ImageView
+        android:id="@+id/iv_widget_check"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/widget_text_color"
-        android:textStyle="bold"
-        tools:text="New Laptop" />
+        android:layout_marginEnd="8dp"
+        tools:src="@drawable/ic_check_box_outline" />
 
-    <TextView
-        android:id="@+id/tv_widget_item_price"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/widget_text_color"
-        android:textSize="12sp"
-        tools:text="Rp 10.000.000" />
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_widget_item_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/widget_text_color"
+            android:textStyle="bold"
+            tools:text="New Laptop" />
+
+        <TextView
+            android:id="@+id/tv_widget_item_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/widget_text_color"
+            android:textSize="12sp"
+            tools:text="Rp 10.000.000" />
+    </LinearLayout>
 
 </LinearLayout>

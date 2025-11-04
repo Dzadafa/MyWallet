@@ -24,11 +24,18 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".widget.WishlistToggleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.dzadafa.mywallet.ACTION_TOGGLE_ITEM" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".widget.WishlistWidgetProvider"
             android:exported="false"
-            android:label="Wishlist Info">
+            android:label="@string/widget_wishlist_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -42,11 +49,10 @@
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
 
-
         <receiver
             android:name=".widget.StatsWidgetProvider"
             android:exported="false"
-            android:label="Stats">
+            android:label="@string/widget_stats_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -58,7 +64,7 @@
         <receiver
             android:name=".widget.QuickAddWidgetProvider"
             android:exported="false"
-            android:label="Quick add button">
+            android:label="@string/widget_quickadd_label">
 
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
