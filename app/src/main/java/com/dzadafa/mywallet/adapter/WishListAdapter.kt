@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.WishlistItem
 import com.dzadafa.mywallet.databinding.ItemWishlistBinding
+import com.dzadafa.mywallet.ui.edit.EditWishlistActivity
 import com.dzadafa.mywallet.utils.Utils
 
 data class WishlistItemAnalysis(
@@ -22,7 +23,8 @@ data class WishlistItemAnalysis(
 )
 
 class WishlistAdapter(
-    private val onToggleCompleted: (WishlistItem) -> Unit
+    private val onToggleCompleted: (WishlistItem) -> Unit,
+    private val onEditClicked: (Int) -> Unit
 ) : ListAdapter<WishlistItemAnalysis, WishlistAdapter.WishlistViewHolder>(WishlistDiffCallback) {
 
     inner class WishlistViewHolder(private val binding: ItemWishlistBinding) :
@@ -60,6 +62,10 @@ class WishlistAdapter(
             
             binding.cbCompleted.setOnClickListener {
                 onToggleCompleted(item)
+            }
+            
+            itemView.setOnClickListener {
+                onEditClicked(item.id)
             }
         }
     }
