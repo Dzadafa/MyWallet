@@ -1,14 +1,19 @@
 package com.dzadafa.mywallet.ui.dashboard
 
 import android.app.Application
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
+import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.utils.Utils
+import com.dzadafa.mywallet.widget.StatsWidgetProvider
 import java.util.Calendar
 import java.util.Date
 
@@ -81,6 +86,19 @@ class DashboardViewModel(
             putString("EXPENSE", Utils.formatAsRupiah(expense))
             apply()
         }
+        
+        notifyStatsWidgetDataChanged()
+    }
+
+    private fun notifyStatsWidgetDataChanged() {
+        val context = getApplication<Application>().applicationContext
+        val intent = Intent(context, StatsWidgetProvider::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            val ids = AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(context.packageName.let { ComponentName(it, StatsWidgetProvider::class.java.name) })
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        context.sendBroadcast(intent)
     }
 
     private fun getFilteredTransactions(transactions: List<Transaction>, filter: TimeFilter): List<Transaction> {
