@@ -61,17 +61,10 @@ class WishlistRemoteViewsFactory(
             setInt(R.id.tv_widget_item_name, "setPaintFlags", paintFlags)
             
             val fillInIntent = Intent().apply {
-                action = WishlistToggleReceiver.ACTION_TOGGLE_ITEM
                 putExtra(WishlistToggleReceiver.EXTRA_ITEM_ID, item.id)
             }
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                item.id, 
-                fillInIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
             
-            setOnClickPendingIntent(R.id.iv_widget_check, pendingIntent)
+            setOnClickFillInIntent(R.id.iv_widget_check, fillInIntent)
         }
         
         return views

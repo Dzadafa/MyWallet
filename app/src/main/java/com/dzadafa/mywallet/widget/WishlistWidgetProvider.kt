@@ -47,6 +47,17 @@ class WishlistWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root_wishlist, pendingIntent)
 
+            val toggleIntent = Intent(context, WishlistToggleReceiver::class.java).apply {
+                action = WishlistToggleReceiver.ACTION_TOGGLE_ITEM
+            }
+            val togglePendingIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                toggleIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            )
+            views.setPendingIntentTemplate(R.id.lv_widget_wishlist, togglePendingIntent)
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)
