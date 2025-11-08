@@ -94,7 +94,6 @@ class TransactionsFragment : Fragment() {
         }
 
         incomeAdapter = TransactionAdapter(
-            onDeleteClicked = { viewModel.deleteTransaction(it) },
             onEditClicked = editClickListener
         )
         binding.rvIncome.apply {
@@ -103,7 +102,6 @@ class TransactionsFragment : Fragment() {
         }
 
         expenseAdapter = TransactionAdapter(
-            onDeleteClicked = { viewModel.deleteTransaction(it) },
             onEditClicked = editClickListener
         )
         binding.rvExpenses.apply {

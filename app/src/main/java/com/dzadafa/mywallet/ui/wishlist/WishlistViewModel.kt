@@ -178,6 +178,14 @@ class WishlistViewModel(
         }
     }
 
+    fun deleteWishlistItem(item: WishlistItem) {
+        viewModelScope.launch {
+            wishlistRepository.deleteById(item.id)
+            _toastMessage.postValue("Item deleted")
+            notifyWidgetDataChanged()
+        }
+    }
+
     private fun notifyWidgetDataChanged() {
         val context = getApplication<Application>().applicationContext
         val intent = Intent(context, WishlistWidgetProvider::class.java).apply {

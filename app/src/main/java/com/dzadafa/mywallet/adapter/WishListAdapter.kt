@@ -24,7 +24,8 @@ data class WishlistItemAnalysis(
 
 class WishlistAdapter(
     private val onToggleCompleted: (WishlistItem) -> Unit,
-    private val onEditClicked: (Int) -> Unit
+    private val onEditClicked: (Int) -> Unit,
+    private val onDeleteClicked: (WishlistItem) -> Unit
 ) : ListAdapter<WishlistItemAnalysis, WishlistAdapter.WishlistViewHolder>(WishlistDiffCallback) {
 
     inner class WishlistViewHolder(private val binding: ItemWishlistBinding) :
@@ -36,12 +37,22 @@ class WishlistAdapter(
             binding.tvItemPrice.text = Utils.formatAsRupiah(item.price)
             binding.tvAffordability.text = analysis.affordabilityMessage
 
+            binding.cbCompleted.isChecked = item.completed
+            binding.cbCompleted.setOnClickListener {
+                onToggleCompleted(item)
+            }
+
             if (item.completed) {
                 binding.tvItemName.paintFlags = binding.tvItemName.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 binding.tvAffordability.visibility = View.GONE
                 binding.tvItemName.setTextColor(Color.GRAY)
                 binding.tvItemPrice.setTextColor(Color.GRAY)
+
+                binding.ivEdit.setImageResource(R.drawable.ic_delete)
+                binding.ivEdit.setOnClickListener {
+                    onDeleteClicked(item)
+                }
             } else {
                 binding.tvItemName.paintFlags = binding.tvItemName.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 binding.tvItemPrice.paintFlags = binding.tvItemPrice.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
@@ -56,16 +67,11 @@ class WishlistAdapter(
                     else -> R.color.widget_text_color
                 }
                 binding.tvAffordability.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
-            }
 
-            binding.cbCompleted.isChecked = item.completed
-            
-            binding.cbCompleted.setOnClickListener {
-                onToggleCompleted(item)
-            }
-            
-            itemView.setOnClickListener {
-                onEditClicked(item.id)
+                binding.ivEdit.setImageResource(R.drawable.ic_settings)
+                binding.ivEdit.setOnClickListener {
+                    onEditClicked(item.id)
+                }
             }
         }
     }

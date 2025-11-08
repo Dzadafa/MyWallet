@@ -14,7 +14,6 @@ import com.dzadafa.mywallet.ui.edit.EditTransactionActivity
 import com.dzadafa.mywallet.utils.Utils
 
 class TransactionAdapter(
-    private val onDeleteClicked: (Transaction) -> Unit,
     private val onEditClicked: (Int) -> Unit
 ) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDiffCallback) {
 
@@ -34,11 +33,7 @@ class TransactionAdapter(
             }
             binding.tvAmount.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
 
-            binding.ivDelete.setOnClickListener {
-                onDeleteClicked(transaction)
-            }
-
-            itemView.setOnClickListener {
+            binding.ivEditTransaction.setOnClickListener {
                 onEditClicked(transaction.id)
             }
         }

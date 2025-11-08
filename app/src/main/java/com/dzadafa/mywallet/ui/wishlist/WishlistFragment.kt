@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dzadafa.mywallet.MyWalletApplication
 import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.adapter.WishlistAdapter
+import com.dzadafa.mywallet.data.WishlistItem
 import com.dzadafa.mywallet.databinding.FragmentWishlistBinding
 import com.dzadafa.mywallet.ui.edit.EditWishlistActivity
 
@@ -57,12 +59,24 @@ class WishlistFragment : Fragment() {
         
         wishlistAdapter = WishlistAdapter(
             onToggleCompleted = { viewModel.toggleItemCompleted(it) },
-            onEditClicked = editClickListener
+            onEditClicked = editClickListener,
+            onDeleteClicked = { showDeleteConfirmationDialog(it) }
         )
         binding.rvWishlist.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = wishlistAdapter
         }
+    }
+    
+    private fun showDeleteConfirmationDialog(item: WishlistItem) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Item")
+            .setMessage("Are you sure you want to delete this completed item?")
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deleteWishlistItem(item)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun setupObservers() {

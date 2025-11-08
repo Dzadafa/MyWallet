@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -65,6 +66,29 @@ class EditTransactionActivity : AppCompatActivity() {
 
         binding.btnSaveChanges.setOnClickListener {
             saveChanges()
+        }
+        
+        binding.btnDeleteTransaction.setOnClickListener {
+            showDeleteConfirmationDialog()
+        }
+    }
+
+    private fun showDeleteConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Transaction")
+            .setMessage("Are you sure you want to delete this transaction?")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteItemAndFinish()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun deleteItemAndFinish() {
+        currentTransaction?.let {
+            viewModel.deleteTransaction(it)
+            Toast.makeText(applicationContext, "Transaction deleted", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 
@@ -157,6 +181,12 @@ class EditTransactionViewModel(private val repository: TransactionRepository) : 
     fun saveChanges(transaction: Transaction) {
         viewModelScope.launch {
             repository.update(transaction)
+        }
+    }
+    
+    fun deleteTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            repository.delete(transaction)
         }
     }
 }

@@ -1,18 +1,27 @@
 package com.dzadafa.mywallet.ui.edit
 
+import android.app.Application
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.MyWalletApplication
+import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.WishlistItem
 import com.dzadafa.mywallet.data.WishlistRepository
 import com.dzadafa.mywallet.databinding.ActivityEditWishlistBinding
+import com.dzadafa.mywallet.widget.WishlistWidgetProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -24,6 +33,7 @@ class EditWishlistActivity : AppCompatActivity() {
 
     private val viewModel: EditWishlistViewModel by viewModels {
         EditWishlistViewModelFactory(
+            (application as MyWalletApplication),
             (application as MyWalletApplication).wishlistRepository
         )
     }
@@ -55,6 +65,27 @@ class EditWishlistActivity : AppCompatActivity() {
         binding.btnSaveChanges.setOnClickListener {
             saveChanges()
         }
+        
+        binding.btnDeleteItem.setOnClickListener {
+            showDeleteConfirmationDialog()
+        }
+    }
+    
+    private fun showDeleteConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Item")
+            .setMessage("Are you sure you want to delete this wishlist item?")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteItemAndFinish()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun deleteItemAndFinish() {
+        viewModel.deleteItem(wishlistItemId)
+        Toast.makeText(applicationContext, "Item deleted", Toast.LENGTH_SHORT).show()
+        finish()
     }
 
     private fun populateUi(item: WishlistItem) {
@@ -93,7 +124,10 @@ class EditWishlistActivity : AppCompatActivity() {
     }
 }
 
-class EditWishlistViewModel(private val repository: WishlistRepository) : ViewModel() {
+class EditWishlistViewModel(
+    private val repository: WishlistRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _wishlistItem = MutableLiveData<WishlistItem?>()
     val wishlistItem: LiveData<WishlistItem?> = _wishlistItem
@@ -107,17 +141,37 @@ class EditWishlistViewModel(private val repository: WishlistRepository) : ViewMo
     fun saveChanges(item: WishlistItem) {
         viewModelScope.launch {
             repository.update(item)
+            notifyWidgetDataChanged()
         }
+    }
+    
+    fun deleteItem(id: Int) {
+        viewModelScope.launch {
+            repository.deleteById(id)
+            notifyWidgetDataChanged()
+        }
+    }
+    
+    private fun notifyWidgetDataChanged() {
+        val context = getApplication<Application>().applicationContext
+        val intent = Intent(context, WishlistWidgetProvider::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            val ids = AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(context.packageName.let { ComponentName(it, WishlistWidgetProvider::class.java.name) })
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        context.sendBroadcast(intent)
     }
 }
 
 class EditWishlistViewModelFactory(
+    private val application: Application,
     private val repository: WishlistRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EditWishlistViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return EditWishlistViewModel(repository) as T
+            return EditWishlistViewModel(repository, application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

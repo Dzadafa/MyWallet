@@ -23,7 +23,8 @@
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/cb_completed" app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/iv_edit"
+        app:layout_constraintTop_toTopOf="parent"
         tools:text="New Laptop" />
 
     <TextView
@@ -44,8 +45,20 @@
         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
         android:textStyle="italic"
         app:layout_constraintStart_toStartOf="@id/tv_item_name"
-        app:layout_constraintEnd_toStartOf="@id/cb_completed" app:layout_constraintTop_toBottomOf="@id/tv_item_price"
+        app:layout_constraintEnd_toStartOf="@id/iv_edit"
+        app:layout_constraintTop_toBottomOf="@id/tv_item_price"
         tools:text="You can afford this now!"
         tools:textColor="@color/income_green" />
+
+    <ImageView
+        android:id="@+id/iv_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:src="@drawable/ic_settings"
+        app:tint="@android:color/darker_gray"
+        app:layout_constraintEnd_toStartOf="@id/cb_completed"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,11 +8,12 @@
     android:paddingBottom="8dp">
 
     <ImageView
-        android:id="@+id/iv_delete"
+        android:id="@+id/iv_edit_transaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:src="@drawable/ic_delete"
+        android:src="@drawable/ic_settings"
+        app:tint="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
@@ -36,7 +37,7 @@
         android:layout_marginTop="4dp"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
         app:layout_constraintStart_toStartOf="@id/tv_description"
-        app:layout_constraintEnd_toStartOf="@id/iv_delete"
+        app:layout_constraintEnd_toStartOf="@id/iv_edit_transaction"
         app:layout_constraintTop_toBottomOf="@id/tv_description"
         tools:text="Freelance" />
 
@@ -47,7 +48,7 @@
         android:layout_marginTop="4dp"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
         app:layout_constraintStart_toStartOf="@id/tv_description"
-        app:layout_constraintEnd_toStartOf="@id/iv_delete"
+        app:layout_constraintEnd_toStartOf="@id/iv_edit_transaction"
         app:layout_constraintTop_toBottomOf="@id/tv_category"
         tools:text="24 Oct 2025" />
 
@@ -58,7 +59,7 @@
         android:layout_marginEnd="8dp"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@id/iv_delete"
+        app:layout_constraintEnd_toStartOf="@id/iv_edit_transaction"
         app:layout_constraintTop_toTopOf="@id/tv_description"
         tools:text="Rp 5.000.000"
         tools:textColor="@color/income_green" />
