@@ -11,6 +11,11 @@ import com.dzadafa.mywallet.data.WishlistRepository
 
 class MyWalletApplication : Application() {
 
+    companion object {
+        const val TRANSACTION_CHANNEL_ID = "TRANSACTION_CHANNEL"
+        const val REMINDER_CHANNEL_ID = "REMINDER_CHANNEL"
+    }
+
     private val database by lazy { AppDatabase.getDatabase(this) }
 
     val transactionRepository by lazy { TransactionRepository(database.transactionDao()) }
@@ -19,20 +24,31 @@ class MyWalletApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ThemeManager.applyTheme(this)
-        createNotificationChannel()
+        createNotificationChannels()
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Transactions"
-            val descriptionText = "Notifications for new transactions"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel("TRANSACTION_CHANNEL", name, importance).apply {
-                description = descriptionText
+            val transactionChannel = NotificationChannel(
+                TRANSACTION_CHANNEL_ID,
+                "Transactions",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notifications for new transactions"
             }
+
+            val reminderChannel = NotificationChannel(
+                REMINDER_CHANNEL_ID,
+                "Reminders",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Daily reminders to log transactions"
+            }
+            
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(transactionChannel)
+            notificationManager.createNotificationChannel(reminderChannel)
         }
     }
 }
