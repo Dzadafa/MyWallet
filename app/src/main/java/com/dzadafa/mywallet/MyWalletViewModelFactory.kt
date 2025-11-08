@@ -18,7 +18,7 @@ class MyWalletViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TransactionsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TransactionsViewModel(transactionRepository) as T
+            return TransactionsViewModel(transactionRepository, application) as T
         }
         if (modelClass.isAssignableFrom(WishlistViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
