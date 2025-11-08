@@ -41,4 +41,9 @@
     <string name="widget_stats_label">Budget Summary</string>
     <string name="widget_quickadd_label">Quick Add Transaction</string>
 
+    <string name="notifications">Notifications</string>
+    <string name="enable_daily_reminders">Enable Daily Reminders</string>
+    <string name="reminder_time">Reminder Time</string>
+    <string name="default_reminder_time">21:00</string>
+
 </resources>
