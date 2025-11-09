@@ -1,76 +1,70 @@
 # MyWallet 💸
 
-> **Languages:**  
-> [🇬🇧 English](../README.md) | [🇮🇩 Bahasa Indonesia](README_ID.md) | [🇨🇳 简体中文](README_ZH.md) | [🇯🇵 日本語](README_JA.md)
+> **Bahasa:** [🇬🇧 English](../README.md) | [🇮🇩 Bahasa Indonesia](README_ID.md) | [🇨🇳 简体中文](README_ZH.md) | [🇯🇵 日本語](README_JA.md)
 
-**MyWallet** adalah aplikasi pencatat keuangan pribadi modern untuk Android, dibuat sepenuhnya dengan **Kotlin**.  
-Aplikasi ini menggunakan **Firebase** sebagai backend yang aman untuk sinkronisasi data secara real-time, memberikan wawasan keuangan cerdas, serta menghadirkan widget yang membantu langsung di layar utama.
+<p align="center">
+  <img src="../app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Ikon Aplikasi MyWallet" width="150">
+</p>
 
-Aplikasi ini dirancang untuk memberikan gambaran jelas tentang kesehatan finansialmu, membantu mencatat pengeluaran, dan memotivasimu untuk menabung sesuai tujuan.
+MyWallet adalah aplikasi pelacak keuangan pribadi modern untuk Android yang dibuat seluruhnya dengan Kotlin. Aplikasi ini mengutamakan mode *offline-first* dan menggunakan database Room lokal untuk menjaga data Anda tetap cepat, pribadi, dan selalu tersedia, sekaligus menyediakan wawasan finansial dan widget layar utama yang membantu.
 
 ---
 
 ## ✨ Fitur
 
-### Fitur Utama Aplikasi
-* **Pencatatan Keuangan Inti:** Catat pemasukan atau pengeluaran dengan detail seperti tanggal, deskripsi, jumlah (dalam Rupiah), dan kategori.
-* **Riwayat Transaksi:** Lihat semua catatan transaksi yang dikelompokkan menjadi “Pemasukan Terbaru” dan “Pengeluaran Terbaru”.
-* **Dasbor Real-time:** Menampilkan **Saldo Saat Ini** (total pemasukan dikurangi pengeluaran). Jika saldo negatif, tampilannya akan berubah menjadi merah.
-* **Filter Berdasarkan Waktu:** Tampilkan data untuk "Sepanjang Waktu", "Bulan Ini", atau "Tahun Ini".
-* **Grafik Visual:**
-    * **Rincian Pengeluaran:** Diagram donat yang menunjukkan ke mana uangmu paling banyak digunakan.
-    * **Perbandingan Pemasukan vs Pengeluaran:** Diagram batang yang menampilkan perbandingan langsung antara total pemasukan dan pengeluaran dalam periode tertentu.
-* **Daftar Keinginan (Wishlist) Cerdas:**
-    * Tambahkan barang yang ingin kamu beli beserta harganya.
-    * **Cek Keterjangkauan:** Bandingkan harga barang dengan saldo saat ini.
-    * **Perkiraan Waktu Menabung:** Jika belum cukup, aplikasi menghitung rata-rata tabungan bulanan dan memberikan saran seperti, “Dengan kecepatan menabungmu sekarang, kamu bisa beli ini dalam 5 bulan.”
-    * **Checklist:** Tandai item sebagai “selesai” atau “dibeli”, lalu item tersebut akan berpindah ke bawah dengan tanda coretan.
-* **Data Aman di Cloud:** Semua data disimpan aman di Firebase Firestore pribadi, terhubung dengan akun anonim unik.
-* **Pengaturan Tema:** Ganti tema antara **Terang**, **Gelap**, atau **Sesuai Sistem** kapan saja.
+### 📱 Fitur Utama Aplikasi
+
+* 📊 **Dasbor Real-time:** Lihat Saldo Saat Ini, Total Pemasukan, dan Total Pengeluaran Anda, semuanya dapat difilter berdasarkan waktu (Sepanjang Waktu, Bulan Ini, Tahun Ini).
+* 📈 **Grafik Visual:**
+    * **Grafik Donat** untuk melihat ke mana uang Anda paling banyak digunakan.
+    * **Grafik Batang** untuk membandingkan total Pemasukan vs. Pengeluaran Anda.
+* ✍️ **Catat Semuanya:** Catat pemasukan dan pengeluaran dengan mudah, lengkap dengan tanggal, deskripsi, jumlah, dan kategori.
+* ⭐ **Daftar Keinginan (Wishlist) Cerdas:**
+    * Tambahkan barang yang ingin Anda beli.
+    * Dapatkan **pengecekan keterjangkauan** instan terhadap saldo Anda.
+    * Lihat **perkiraan waktu menabung** (misal, "Est. 5 bulan lagi") berdasarkan kebiasaan menabung Anda.
+* ✏️ **Edit & Hapus:**
+    * Ketuk ikon pengaturan pada transaksi apa pun untuk mengedit atau menghapusnya.
+    * Ketuk ikon pengaturan pada item wishlist untuk mengeditnya.
+    * Tandai item wishlist sebagai "selesai", dan ikon edit akan berubah menjadi ikon hapus.
+* 🔔 **Notifikasi:** Dapatkan notifikasi lokal instan setiap kali Anda berhasil menambahkan transaksi baru.
+* ⏰ **Pengingat Harian:** Atur pengingat harian khusus (default jam 21:00) agar Anda tidak pernah lupa mencatat keuangan.
+* 🎨 **Pengaturan Tema:** Ganti tema secara instan antara mode **Terang**, **Gelap**, atau **Sesuai Sistem**.
+* 🔒 **Offline & Pribadi:** Semua data disimpan dengan aman di database Room pribadi pada perangkat Anda. Tidak perlu akun atau koneksi internet.
+
+### 🏠 Widget Layar Utama
+
+* 💰 **Widget Statistik:** Total saldo, pemasukan, dan pengeluaran Anda dalam sekejap. Diperbarui secara instan saat Anda membuat perubahan di aplikasi.
+* 🛒 **Widget Wishlist:** Daftar interaktif yang dapat di-scroll. Anda dapat menandai barang impian Anda langsung dari layar utama.
+* ➕ **Widget Tambah Cepat:** Tombol sederhana yang membuka layar khusus untuk menambahkan transaksi baru dengan cepat tanpa membuka aplikasi penuh.
 
 ---
 
-## 🏠 Widget Layar Utama
-* **Widget Statistik:** Menampilkan Saldo Saat Ini, Total Pemasukan, dan Total Pengeluaran langsung di layar utama.
-* **Widget Wishlist:** Menampilkan item wishlist berikutnya yang belum dibeli beserta status keterjangkauannya (contoh: “Kamu bisa beli sekarang!” atau “Perkiraan 3 bulan lagi”).
-* **Widget Tambah Cepat:** Tombol “+ Tambah Transaksi” yang bisa ditekan untuk langsung menambahkan pemasukan/pengeluaran tanpa membuka aplikasi utama.
+## 🛠 Teknologi yang Digunakan
 
----
-
-## 🛠️ Teknologi yang Digunakan
-* **Bahasa:** 100% [Kotlin](https://kotlinlang.org/)
-* **Backend:** [Firebase](https://firebase.google.com/)
-    * **Autentikasi:** Login anonim untuk akun pengguna unik dan aman.
-    * **Database:** [Cloud Firestore](https://firebase.google.com/products/firestore) untuk penyimpanan dan sinkronisasi data secara real-time.
-* **Arsitektur:**
-    * [MVVM](https://developer.android.com/topic/architecture)
-    * [Android Architecture Components](https://developer.android.com/topic/libraries/architecture) (ViewModel, LiveData)
-* **UI & Navigasi:**
-    * [Android Navigation Component](https://developer.android.com/guide/navigation)
-    * [ViewBinding](https://developer.android.com/topic/libraries/view-binding)
-    * Material Components (Tombol, Kartu, Kolom Teks)
-* **Grafik:** [MPAndroidChart](https://github.com/PhilJay/MPAndroidChart)
-* **Konkruensi:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
-* **Widget:** [AppWidgets](https://developer.android.com/guide/topics/appwidgets)
+* **Bahasa:** 100% **Kotlin**
+* **Arsitektur:** **MVVM** (ViewModel, LiveData)
+* **Database:** **Room** (untuk penyimpanan database SQL lokal di perangkat)
+* **UI:** **ViewBinding**, **Android Navigation Component**, Material Components
+* **Konkurensi:** **Kotlin Coroutines**
+* **Async:** `AlarmManager` & `BroadcastReceiver` (untuk pengingat harian)
+* **Grafik:** **MPAndroidChart**
+* **Widget:** **AppWidgets** dengan `RemoteViews` & `ListView`
 
 ---
 
 ## 🚀 Cara Build
 
-Proyek ini dibangun menggunakan Gradle Wrapper.
+Proyek ini menggunakan Gradle wrapper.
 
-1. **Klon repositori ini.**
-2. **Konfigurasi Firebase:**
-    * Buat proyek baru di [Firebase Console](https://console.firebase.google.com/).
-    * Tambahkan aplikasi Android dengan nama paket `com.dzadafa.mywallet`.
-    * Unduh file `google-services.json` dari Firebase, lalu letakkan di folder `MyWallet/app/`.
-    * Di Firebase Console, buka **Authentication → Sign-in method**, lalu aktifkan metode **Anonymous**.
-    * Buka **Firestore Database**, lalu buat database baru.
-3. **Build Aplikasi:**
-    * Hubungkan perangkat Android atau jalankan emulator.
-    * Jalankan perintah `gradlew installDebug` dari direktori utama proyek.
+1.  Salin (clone) repositori ini.
+2.  Hubungkan perangkat Android atau jalankan emulator.
+3.  Jalankan `gradlew installDebug` dari direktori root proyek.
 
 ---
 
-Would you like me to make this into a clean `.md` file ready to drop into `docs/README_ID.md` (with proper Markdown formatting)?
+## 🔮 Rencana Masa Depan (v2.0)
 
+* 🎨 **UI Material 3:** Memigrasikan seluruh aplikasi ke sistem desain "Material You" yang modern.
+* 🔔 **Push Notification:** Menambahkan Firebase Cloud Messaging (FCM) untuk notifikasi penting.
+* ⚙️ **Remote Config:** Menggunakan Firebase Remote Config untuk menampilkan modal atau pesan dinamis di dalam aplikasi.
