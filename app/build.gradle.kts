@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,9 +12,24 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+val keystorePropertiesFile = rootProject.file("app/keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.dzadafa.mywallet"
     compileSdk = 36
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = file(keystoreProperties["storeFile"] as String?)
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
 
     defaultConfig {
         applicationId = "com.dzadafa.mywallet"
@@ -25,11 +43,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // isDebuggable = true
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
