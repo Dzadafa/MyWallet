@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -45,32 +44,21 @@ class DashboardFragment : Fragment() {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        setupFilterDropdown()
         setupChartStyles()
         setupObservers()
 
         return root
     }
 
-    private fun setupFilterDropdown() {
-        val filterOptions = resources.getStringArray(R.array.time_filter_options)
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, filterOptions)
-        binding.acFilter.setAdapter(adapter)
-
-        binding.acFilter.setOnItemClickListener { _, _, position, _ ->
-            val selectedFilter = when (position) {
-                1 -> TimeFilter.THIS_MONTH
-                2 -> TimeFilter.THIS_YEAR
-                else -> TimeFilter.ALL_TIME
-            }
-            viewModel.setFilter(selectedFilter)
-        }
+    override fun onResume() {
+        super.onResume()
+        viewModel.updateDashboardData()
     }
 
     private fun setupObservers() {
         viewModel.currentBalance.observe(viewLifecycleOwner) { balance ->
             binding.tvCurrentBalance.text = Utils.formatAsRupiah(balance)
-            val color = if (balance < 0) R.color.expense_red else R.color.widget_text_color
+            val color = if (balance < 0) R.color.expense_red else R.color.text_default_color
             binding.tvCurrentBalance.setTextColor(ContextCompat.getColor(requireContext(), color))
         }
 

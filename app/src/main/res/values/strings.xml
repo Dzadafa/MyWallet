@@ -26,6 +26,12 @@
     <string name="income_vs_expense">Income vs. Expense</string>
     <string name="no_data_to_display">No data to display</string>
 
+    <string name="last_3_months">Last 3 Months</string>
+    <string name="select_month">Select Month</string>
+    <string name="filter_by">Filter by</string>
+    <string name="filter_time_period">Time Period</string>
+    <string name="filter_current_month">Current Month</string>
+
     <string-array name="time_filter_options">
         <item>@string/all_time</item>
         <item>@string/this_month</item>

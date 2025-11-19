@@ -51,14 +51,18 @@ class TransactionsFragment : Fragment() {
 
         setupRecyclerViews()
         setupObservers()
+        setupDatePicker()
 
         binding.btnAddTransaction.setOnClickListener {
             addTransaction()
         }
         
-        setupDatePicker()
-
         return root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.forceFilterUpdate()
     }
     
     private fun setupDatePicker() {

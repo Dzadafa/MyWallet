@@ -1,7 +1,7 @@
 package com.dzadafa.mywallet.ui.transactions
 
-import android.Manifest
 import android.app.Application
+import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -12,11 +12,11 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.dzadafa.mywallet.FilterManager
 import com.dzadafa.mywallet.MainActivity
-import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.data.TransactionRepository
@@ -29,16 +29,35 @@ class TransactionsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    val incomeList: LiveData<List<Transaction>> = repository.allTransactions
-        .asLiveData()
-        .mapTransactions(TransactionType.INCOME)
+    private val rawTransactions: LiveData<List<Transaction>> = repository.allTransactions.asLiveData()
+    private val _filterTrigger = MutableLiveData(Unit)
 
-    val expenseList: LiveData<List<Transaction>> = repository.allTransactions
-        .asLiveData()
-        .mapTransactions(TransactionType.EXPENSE)
+    val incomeList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
+        filterAndSort(transactions, TransactionType.INCOME)
+    }
+
+    val expenseList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
+        filterAndSort(transactions, TransactionType.EXPENSE)
+    }
 
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
+
+    init {
+        _filterTrigger.observeForever {
+            // Observing this trigger forces the map transformations (incomeList, expenseList) to re-run
+        }
+    }
+
+    private fun filterAndSort(transactions: List<Transaction>, type: TransactionType): List<Transaction> {
+        val filteredByDate = FilterManager.filterTransactions(getApplication(), transactions)
+        return filteredByDate.filter { it.type == type.name.lowercase() }
+    }
+
+    fun forceFilterUpdate() {
+        // Trigger the LiveData map transformation to re-run with the new global filter
+        _filterTrigger.value = Unit
+    }
 
     fun addTransaction(type: String, description: String, amountStr: String, category: String, date: Date) {
         if (description.isBlank()) {
@@ -67,13 +86,6 @@ class TransactionsViewModel(
             repository.insert(newTransaction)
             _toastMessage.postValue("Transaction added!")
             sendTransactionNotification(newTransaction)
-        }
-    }
-
-    fun deleteTransaction(transaction: Transaction) {
-        viewModelScope.launch {
-            repository.delete(transaction)
-            _toastMessage.postValue("Transaction deleted")
         }
     }
 
@@ -111,13 +123,12 @@ class TransactionsViewModel(
         }
     }
 
-    private enum class TransactionType { INCOME, EXPENSE }
-
-    private fun LiveData<List<Transaction>>.mapTransactions(type: TransactionType): LiveData<List<Transaction>> {
-        val result = MutableLiveData<List<Transaction>>()
-        this.observeForever { transactions ->
-            result.value = transactions.filter { it.type == type.name.lowercase() }
+    fun deleteTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            repository.delete(transaction)
+            _toastMessage.postValue("Transaction deleted")
         }
-        return result
     }
+
+    private enum class TransactionType { INCOME, EXPENSE }
 }
