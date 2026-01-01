@@ -11,9 +11,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.FilterManager
 import com.dzadafa.mywallet.MainActivity
@@ -32,21 +32,24 @@ class TransactionsViewModel(
     private val rawTransactions: LiveData<List<Transaction>> = repository.allTransactions.asLiveData()
     private val _filterTrigger = MutableLiveData(Unit)
 
-    val incomeList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
-        filterAndSort(transactions, TransactionType.INCOME)
-    }
-
-    val expenseList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
-        filterAndSort(transactions, TransactionType.EXPENSE)
-    }
+    val incomeList = MediatorLiveData<List<Transaction>>()
+    val expenseList = MediatorLiveData<List<Transaction>>()
 
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
 
     init {
-        _filterTrigger.observeForever {
-            // Observing this trigger forces the map transformations (incomeList, expenseList) to re-run
-        }
+        incomeList.addSource(rawTransactions) { updateFilteredLists() }
+        incomeList.addSource(_filterTrigger) { updateFilteredLists() }
+        
+        expenseList.addSource(rawTransactions) { updateFilteredLists() }
+        expenseList.addSource(_filterTrigger) { updateFilteredLists() }
+    }
+
+    private fun updateFilteredLists() {
+        val transactions = rawTransactions.value ?: emptyList()
+        incomeList.value = filterAndSort(transactions, TransactionType.INCOME)
+        expenseList.value = filterAndSort(transactions, TransactionType.EXPENSE)
     }
 
     private fun filterAndSort(transactions: List<Transaction>, type: TransactionType): List<Transaction> {
@@ -55,7 +58,6 @@ class TransactionsViewModel(
     }
 
     fun forceFilterUpdate() {
-        // Trigger the LiveData map transformation to re-run with the new global filter
         _filterTrigger.value = Unit
     }
 
