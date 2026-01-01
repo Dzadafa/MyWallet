@@ -46,14 +46,18 @@ object FilterManager {
     fun getFilterDisplayString(context: Context): String {
         val (type, year, month) = getFilterState(context)
         return when (type) {
-            FilterType.THIS_MONTH -> context.getString(R.string.this_month)
+            FilterType.THIS_MONTH -> {
+                val cal = Calendar.getInstance()
+                if (year == cal.get(Calendar.YEAR) && month == cal.get(Calendar.MONTH)) {
+                    context.getString(R.string.this_month)
+                } else {
+                    val displayCal = Calendar.getInstance().apply { set(year, month, 1) }
+                    displayMonthFormat.format(displayCal.time)
+                }
+            }
             FilterType.LAST_3_MONTHS -> context.getString(R.string.last_3_months)
             FilterType.THIS_YEAR -> context.getString(R.string.this_year)
             FilterType.ALL_TIME -> context.getString(R.string.all_time)
-            else -> {
-                val cal = Calendar.getInstance().apply { set(year, month, 1) }
-                displayMonthFormat.format(cal.time)
-            }
         }
     }
 
@@ -85,14 +89,45 @@ object FilterManager {
             FilterType.ALL_TIME -> Date(0)
         }
     }
+
+    private fun getFilterEndDate(context: Context): Date? {
+        val (type, year, month) = getFilterState(context)
+        val cal = Calendar.getInstance()
+
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+
+        return when (type) {
+            FilterType.THIS_MONTH -> {
+                cal.set(Calendar.YEAR, year)
+                cal.set(Calendar.MONTH, month)
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                cal.add(Calendar.MONTH, 1) 
+                cal.time
+            }
+            FilterType.THIS_YEAR -> {
+                cal.set(Calendar.DAY_OF_YEAR, 1)
+                cal.add(Calendar.YEAR, 1) 
+                cal.time
+            }
+            else -> null
+        }
+    }
     
     fun filterTransactions(context: Context, transactions: List<Transaction>): List<Transaction> {
-        val startTime = getFilterStartDate(context)
         if (getFilterState(context).first == FilterType.ALL_TIME) {
             return transactions
         }
-        return transactions.filter {
-            it.date.after(startTime) || it.date == startTime
+
+        val startTime = getFilterStartDate(context)
+        val endTime = getFilterEndDate(context)
+
+        return transactions.filter { transaction ->
+            val isAfterStart = transaction.date.after(startTime) || transaction.date == startTime
+            val isBeforeEnd = endTime == null || transaction.date.before(endTime)
+            isAfterStart && isBeforeEnd
         }
     }
 }
