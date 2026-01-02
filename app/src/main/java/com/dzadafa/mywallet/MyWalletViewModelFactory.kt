@@ -3,6 +3,7 @@ package com.dzadafa.mywallet
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.dzadafa.mywallet.data.BudgetRepository
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.data.WishlistRepository
 import com.dzadafa.mywallet.ui.dashboard.DashboardViewModel
@@ -12,6 +13,7 @@ import com.dzadafa.mywallet.ui.wishlist.WishlistViewModel
 class MyWalletViewModelFactory(
     private val transactionRepository: TransactionRepository,
     private val wishlistRepository: WishlistRepository,
+    private val budgetRepository: BudgetRepository, 
     private val application: Application
 ) : ViewModelProvider.Factory {
 
@@ -26,7 +28,7 @@ class MyWalletViewModelFactory(
         }
         if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return DashboardViewModel(transactionRepository, application) as T
+            return DashboardViewModel(transactionRepository, application) as T 
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

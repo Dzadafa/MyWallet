@@ -1,45 +1,40 @@
 package com.dzadafa.mywallet.ui.transactions
 
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.ArrayAdapter
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.dzadafa.mywallet.FilterManager
 import com.dzadafa.mywallet.MyWalletApplication
 import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.adapter.TransactionAdapter
 import com.dzadafa.mywallet.data.Transaction
+import com.dzadafa.mywallet.databinding.DialogAddTransactionBinding
 import com.dzadafa.mywallet.databinding.FragmentTransactionsBinding
 import com.dzadafa.mywallet.ui.edit.EditTransactionActivity
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 class TransactionsFragment : Fragment() {
 
     private var _binding: FragmentTransactionsBinding? = null
     private val binding get() = _binding!!
-    
+
     private val viewModel: TransactionsViewModel by viewModels {
         MyWalletViewModelFactory(
             (requireActivity().application as MyWalletApplication).transactionRepository,
             (requireActivity().application as MyWalletApplication).wishlistRepository,
+            (requireActivity().application as MyWalletApplication).budgetRepository,
             (requireActivity().application as MyWalletApplication)
         )
     }
-    
-    private lateinit var incomeAdapter: TransactionAdapter
-    private lateinit var expenseAdapter: TransactionAdapter
-    
-    private val selectedDate = Calendar.getInstance()
-    private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,103 +46,135 @@ class TransactionsFragment : Fragment() {
 
         setupRecyclerViews()
         setupObservers()
-        setupDatePicker()
+        setupListeners()
+        updateFilterButtonText()
 
-        binding.btnAddTransaction.setOnClickListener {
-            addTransaction()
-        }
-        
         return root
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.forceFilterUpdate()
-    }
-    
-    private fun setupDatePicker() {
-        updateDateEditText()
-
-        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-            selectedDate.set(Calendar.YEAR, year)
-            selectedDate.set(Calendar.MONTH, month)
-            selectedDate.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-            updateDateEditText()
+    private fun setupListeners() {
+        binding.fabAddTransaction.setOnClickListener {
+            showAddTransactionDialog()
         }
 
-        binding.etDate.setOnClickListener {
-            DatePickerDialog(
-                requireContext(),
-                dateSetListener,
-                selectedDate.get(Calendar.YEAR),
-                selectedDate.get(Calendar.MONTH),
-                selectedDate.get(Calendar.DAY_OF_MONTH)
-            ).show()
+        binding.btnFilter.setOnClickListener {
+            showFilterDialog()
         }
     }
-    
-    private fun updateDateEditText() {
-        binding.etDate.setText(displayDateFormat.format(selectedDate.time))
+
+    private fun updateFilterButtonText() {
+        binding.btnFilter.text = FilterManager.getFilterDisplayString(requireContext())
+    }
+
+    private fun showFilterDialog() {
+        val filters = FilterManager.FilterType.entries.toTypedArray()
+        val filterNames = filters.map { type ->
+            when (type) {
+                FilterManager.FilterType.THIS_MONTH -> getString(R.string.this_month)
+                FilterManager.FilterType.LAST_3_MONTHS -> getString(R.string.last_3_months)
+                FilterManager.FilterType.THIS_YEAR -> getString(R.string.this_year)
+                FilterManager.FilterType.ALL_TIME -> getString(R.string.all_time)
+            }
+        }.toTypedArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.select_filter))
+            .setItems(filterNames) { _, which ->
+                val selectedFilter = filters[which]
+                
+                if (selectedFilter == FilterManager.FilterType.THIS_MONTH) {
+                     val cal = Calendar.getInstance()
+                     FilterManager.saveFilterState(
+                        requireContext(), 
+                        FilterManager.FilterType.THIS_MONTH, 
+                        cal.get(Calendar.YEAR), 
+                        cal.get(Calendar.MONTH)
+                    )
+                    updateFilterButtonText()
+                    viewModel.forceFilterUpdate()
+                } else {
+                    val cal = Calendar.getInstance()
+                    FilterManager.saveFilterState(
+                        requireContext(), 
+                        selectedFilter, 
+                        cal.get(Calendar.YEAR), 
+                        cal.get(Calendar.MONTH)
+                    )
+                    updateFilterButtonText()
+                    viewModel.forceFilterUpdate()
+                }
+            }
+            .show()
     }
 
     private fun setupRecyclerViews() {
-        val editClickListener = { transactionId: Int ->
-            val intent = Intent(requireContext(), EditTransactionActivity::class.java)
-            intent.putExtra("TRANSACTION_ID", transactionId)
-            startActivity(intent)
+        val incomeAdapter = TransactionAdapter { transaction ->
+            openEditTransaction(transaction)
         }
-
-        incomeAdapter = TransactionAdapter(
-            onEditClicked = editClickListener
-        )
         binding.rvIncome.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = incomeAdapter
         }
 
-        expenseAdapter = TransactionAdapter(
-            onEditClicked = editClickListener
-        )
+        val expenseAdapter = TransactionAdapter { transaction ->
+            openEditTransaction(transaction)
+        }
         binding.rvExpenses.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = expenseAdapter
         }
     }
 
+    private fun openEditTransaction(transaction: Transaction) {
+        val intent = Intent(requireContext(), EditTransactionActivity::class.java).apply {
+            putExtra("TRANSACTION_ID", transaction.id)
+        }
+        startActivity(intent)
+    }
+
     private fun setupObservers() {
-        viewModel.incomeList.observe(viewLifecycleOwner) { incomeList ->
-            incomeAdapter.submitList(incomeList)
+        viewModel.incomeList.observe(viewLifecycleOwner) { transactions ->
+            (binding.rvIncome.adapter as TransactionAdapter).submitList(transactions)
+            binding.tvNoIncome.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }
 
-        viewModel.expenseList.observe(viewLifecycleOwner) { expenseList ->
-            expenseAdapter.submitList(expenseList)
+        viewModel.expenseList.observe(viewLifecycleOwner) { transactions ->
+            (binding.rvExpenses.adapter as TransactionAdapter).submitList(transactions)
+            binding.tvNoExpenses.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }
 
         viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun addTransaction() {
-        val description = binding.etDescription.text.toString()
-        val amount = binding.etAmount.text.toString()
-        val category = binding.etCategory.text.toString()
-        val selectedTypeId = binding.rgType.checkedRadioButtonId
-        val type = if (selectedTypeId == R.id.rb_income) "income" else "expense"
-        val date: Date = selectedDate.time
+    private fun showAddTransactionDialog() {
+        val dialogBinding = DialogAddTransactionBinding.inflate(layoutInflater)
+        
+        val categories = listOf("Food", "Transport", "Entertainment", "Bills", "Shopping", "Health", "Education", "Other")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categories)
+        dialogBinding.etCategory.setAdapter(adapter)
 
-        viewModel.addTransaction(type, description, amount, category, date)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Add Transaction")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Add", null) 
+            .setNegativeButton("Cancel", null)
+            .create()
 
-        clearForm()
-    }
+        dialog.setOnShowListener {
+            val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            button.setOnClickListener {
+                val description = dialogBinding.etDescription.text.toString()
+                val amount = dialogBinding.etAmount.text.toString()
+                val category = dialogBinding.etCategory.text.toString()
+                val type = if (dialogBinding.rbIncome.isChecked) "income" else "expense"
+                val date = Date()
 
-    private fun clearForm() {
-        binding.etDescription.text?.clear()
-        binding.etAmount.text?.clear()
-        binding.etCategory.text?.clear()
-        binding.rbExpense.isChecked = true
-        selectedDate.timeInMillis = System.currentTimeMillis()
-        updateDateEditText()
+                viewModel.addTransaction(type, description, amount, category, date)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
     }
 
     override fun onDestroyView() {

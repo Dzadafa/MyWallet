@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.WishlistItem
 import com.dzadafa.mywallet.databinding.ItemWishlistBinding
-import com.dzadafa.mywallet.ui.edit.EditWishlistActivity
 import com.dzadafa.mywallet.utils.Utils
 
 data class WishlistItemAnalysis(
@@ -22,11 +21,12 @@ data class WishlistItemAnalysis(
     val isBudgetNegative: Boolean
 )
 
-class WishlistAdapter(
+
+class WishListAdapter(
     private val onToggleCompleted: (WishlistItem) -> Unit,
     private val onEditClicked: (Int) -> Unit,
     private val onDeleteClicked: (WishlistItem) -> Unit
-) : ListAdapter<WishlistItemAnalysis, WishlistAdapter.WishlistViewHolder>(WishlistDiffCallback) {
+) : ListAdapter<WishlistItemAnalysis, WishListAdapter.WishlistViewHolder>(WishlistDiffCallback) {
 
     inner class WishlistViewHolder(private val binding: ItemWishlistBinding) :
         RecyclerView.ViewHolder(binding.root) {

@@ -1,6 +1,5 @@
 package com.dzadafa.mywallet.adapter
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -10,11 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.databinding.ItemTransactionBinding
-import com.dzadafa.mywallet.ui.edit.EditTransactionActivity
 import com.dzadafa.mywallet.utils.Utils
 
 class TransactionAdapter(
-    private val onEditClicked: (Int) -> Unit
+    private val onEditClicked: (Transaction) -> Unit
 ) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDiffCallback) {
 
     inner class TransactionViewHolder(private val binding: ItemTransactionBinding) :
@@ -34,7 +32,7 @@ class TransactionAdapter(
             binding.tvAmount.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
 
             binding.ivEditTransaction.setOnClickListener {
-                onEditClicked(transaction.id)
+                onEditClicked(transaction)
             }
         }
     }

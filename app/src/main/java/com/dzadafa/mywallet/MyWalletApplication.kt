@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import com.dzadafa.mywallet.data.AppDatabase
+import com.dzadafa.mywallet.data.BudgetRepository
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.data.WishlistRepository
 
@@ -20,6 +21,7 @@ class MyWalletApplication : Application() {
 
     val transactionRepository by lazy { TransactionRepository(database.transactionDao()) }
     val wishlistRepository by lazy { WishlistRepository(database.wishlistDao()) }
+    val budgetRepository by lazy { BudgetRepository(database.budgetDao()) }
 
     override fun onCreate() {
         super.onCreate()

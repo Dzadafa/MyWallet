@@ -12,8 +12,9 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dzadafa.mywallet.MyWalletApplication
 import com.dzadafa.mywallet.MyWalletViewModelFactory
-import com.dzadafa.mywallet.adapter.WishlistAdapter
+import com.dzadafa.mywallet.adapter.WishListAdapter
 import com.dzadafa.mywallet.data.WishlistItem
+import com.dzadafa.mywallet.databinding.DialogAddWishlistBinding
 import com.dzadafa.mywallet.databinding.FragmentWishlistBinding
 import com.dzadafa.mywallet.ui.edit.EditWishlistActivity
 
@@ -26,11 +27,10 @@ class WishlistFragment : Fragment() {
         MyWalletViewModelFactory(
             (requireActivity().application as MyWalletApplication).transactionRepository,
             (requireActivity().application as MyWalletApplication).wishlistRepository,
+            (requireActivity().application as MyWalletApplication).budgetRepository,
             (requireActivity().application as MyWalletApplication)
         )
     }
-
-    private lateinit var wishlistAdapter: WishlistAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,35 +43,43 @@ class WishlistFragment : Fragment() {
         setupRecyclerView()
         setupObservers()
 
-        binding.btnAddWishlistItem.setOnClickListener {
-            addWishlistItem()
+        binding.fabAddWishlist.setOnClickListener {
+            showAddWishlistDialog()
         }
 
         return root
     }
 
     private fun setupRecyclerView() {
-        val editClickListener = { itemId: Int ->
-            val intent = Intent(requireContext(), EditWishlistActivity::class.java)
-            intent.putExtra("WISHLIST_ITEM_ID", itemId)
-            startActivity(intent)
-        }
-        
-        wishlistAdapter = WishlistAdapter(
-            onToggleCompleted = { viewModel.toggleItemCompleted(it) },
-            onEditClicked = editClickListener,
-            onDeleteClicked = { showDeleteConfirmationDialog(it) }
+        val adapter = WishListAdapter(
+            onToggleCompleted = { item ->
+                viewModel.toggleItemCompleted(item)
+            },
+            onEditClicked = { id ->
+                val intent = Intent(requireContext(), EditWishlistActivity::class.java).apply {
+                    putExtra("WISHLIST_ID", id)
+                }
+                startActivity(intent)
+            },
+            onDeleteClicked = { item ->
+                showDeleteConfirmation(item)
+            }
         )
-        binding.rvWishlist.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = wishlistAdapter
+        binding.rvWishlist.layoutManager = LinearLayoutManager(context)
+        binding.rvWishlist.adapter = adapter
+    }
+
+    private fun setupObservers() {
+        
+        viewModel.analyzedWishlist.observe(viewLifecycleOwner) { items ->
+            (binding.rvWishlist.adapter as WishListAdapter).submitList(items)
         }
     }
-    
-    private fun showDeleteConfirmationDialog(item: WishlistItem) {
+
+    private fun showDeleteConfirmation(item: WishlistItem) {
         AlertDialog.Builder(requireContext())
             .setTitle("Delete Item")
-            .setMessage("Are you sure you want to delete this completed item?")
+            .setMessage("Are you sure you want to delete '${item.name}'?")
             .setPositiveButton("Delete") { _, _ ->
                 viewModel.deleteWishlistItem(item)
             }
@@ -79,26 +87,31 @@ class WishlistFragment : Fragment() {
             .show()
     }
 
-    private fun setupObservers() {
-        viewModel.analyzedWishlist.observe(viewLifecycleOwner) { analyzedList ->
-            wishlistAdapter.submitList(analyzedList)
+    private fun showAddWishlistDialog() {
+        val dialogBinding = DialogAddWishlistBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("New Wishlist Item")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Add", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            button.setOnClickListener {
+                val name = dialogBinding.etName.text.toString()
+                val priceStr = dialogBinding.etPrice.text.toString()
+
+                if (name.isNotBlank() && priceStr.isNotBlank()) {
+                    
+                    viewModel.addWishlistItem(name, priceStr)
+                    dialog.dismiss()
+                } else {
+                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-
-        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun addWishlistItem() {
-        val name = binding.etItemName.text.toString()
-        val price = binding.etItemPrice.text.toString()
-        viewModel.addWishlistItem(name, price)
-        clearForm()
-    }
-
-    private fun clearForm() {
-        binding.etItemName.text?.clear()
-        binding.etItemPrice.text?.clear()
+        dialog.show()
     }
 
     override fun onDestroyView() {
