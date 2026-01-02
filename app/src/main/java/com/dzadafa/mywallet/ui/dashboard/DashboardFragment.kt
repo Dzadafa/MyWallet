@@ -32,6 +32,7 @@ class DashboardFragment : Fragment() {
         MyWalletViewModelFactory(
             (requireActivity().application as MyWalletApplication).transactionRepository,
             (requireActivity().application as MyWalletApplication).wishlistRepository,
+            (requireActivity().application as MyWalletApplication).budgetRepository, 
             (requireActivity().application as MyWalletApplication)
         )
     }

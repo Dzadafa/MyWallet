@@ -8,7 +8,7 @@
     <string name="expense">Expense</string>
     <string name="description">Description</string>
     <string name="amount_rp">Amount (Rp)</string>
-    <string name="category">Category (e.g., Food, Salary)</string>
+    <string name="category">Category</string>
     <string name="add_transaction">Add Transaction</string>
     <string name="recent_income">Recent Income</string>
     <string name="recent_expenses">Recent Expenses</string>
@@ -31,6 +31,9 @@
     <string name="filter_by">Filter by</string>
     <string name="filter_time_period">Time Period</string>
     <string name="filter_current_month">Current Month</string>
+    <string name="select_filter">Select Filter</string>
+    <string name="no_income_records">No income records found for this period.</string>
+    <string name="no_expense_records">No expense records found for this period.</string>
 
     <string-array name="time_filter_options">
         <item>@string/all_time</item>
@@ -51,5 +54,4 @@
     <string name="enable_daily_reminders">Enable Daily Reminders</string>
     <string name="reminder_time">Reminder Time</string>
     <string name="default_reminder_time">21:00</string>
-
 </resources>
