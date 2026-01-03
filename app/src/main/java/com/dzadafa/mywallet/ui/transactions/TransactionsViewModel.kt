@@ -11,13 +11,15 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.FilterManager
 import com.dzadafa.mywallet.MainActivity
 import com.dzadafa.mywallet.R
+import com.dzadafa.mywallet.data.Budget
+import com.dzadafa.mywallet.data.BudgetRepository
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.utils.Utils
@@ -26,30 +28,31 @@ import java.util.Date
 
 class TransactionsViewModel(
     private val repository: TransactionRepository,
+    private val budgetRepository: BudgetRepository,
     application: Application
 ) : AndroidViewModel(application) {
 
     private val rawTransactions: LiveData<List<Transaction>> = repository.allTransactions.asLiveData()
     private val _filterTrigger = MutableLiveData(Unit)
 
-    val incomeList = MediatorLiveData<List<Transaction>>()
-    val expenseList = MediatorLiveData<List<Transaction>>()
+    
+    val allBudgets: LiveData<List<Budget>> = budgetRepository.allBudgets.asLiveData()
+
+    val incomeList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
+        filterAndSort(transactions, TransactionType.INCOME)
+    }
+
+    val expenseList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
+        filterAndSort(transactions, TransactionType.EXPENSE)
+    }
 
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
 
     init {
-        incomeList.addSource(rawTransactions) { updateFilteredLists() }
-        incomeList.addSource(_filterTrigger) { updateFilteredLists() }
-        
-        expenseList.addSource(rawTransactions) { updateFilteredLists() }
-        expenseList.addSource(_filterTrigger) { updateFilteredLists() }
-    }
-
-    private fun updateFilteredLists() {
-        val transactions = rawTransactions.value ?: emptyList()
-        incomeList.value = filterAndSort(transactions, TransactionType.INCOME)
-        expenseList.value = filterAndSort(transactions, TransactionType.EXPENSE)
+        _filterTrigger.observeForever {
+            
+        }
     }
 
     private fun filterAndSort(transactions: List<Transaction>, type: TransactionType): List<Transaction> {
@@ -58,6 +61,7 @@ class TransactionsViewModel(
     }
 
     fun forceFilterUpdate() {
+        
         _filterTrigger.value = Unit
     }
 
@@ -80,7 +84,7 @@ class TransactionsViewModel(
             type = type,
             description = description,
             amount = amount,
-            category = category.replaceFirstChar { it.uppercase() },
+            category = category,
             date = date
         )
 
