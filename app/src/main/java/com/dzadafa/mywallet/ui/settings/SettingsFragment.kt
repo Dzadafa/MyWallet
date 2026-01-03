@@ -1,6 +1,7 @@
 package com.dzadafa.mywallet.ui.settings
 
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import com.dzadafa.mywallet.ReminderScheduler
 import com.dzadafa.mywallet.ThemeManager
 import com.dzadafa.mywallet.databinding.FragmentSettingsBinding
 import com.dzadafa.mywallet.R
+import com.dzadafa.mywallet.ui.budget.ManageBudgetsActivity
 import java.util.Locale
 
 class SettingsFragment : Fragment() {
@@ -31,6 +33,10 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.btnManageBudgets.setOnClickListener {
+            startActivity(Intent(requireContext(), ManageBudgetsActivity::class.java))
+        }
 
         setupThemeRadioGroup()
         setupReminderSettings()

@@ -106,5 +106,10 @@
             android:exported="false"
             android:theme="@style/Theme.MyWallet.NoActionBar" />
 
+        <activity
+            android:name=".ui.budget.ManageBudgetsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyWallet" />
+
         </application>
 </manifest>

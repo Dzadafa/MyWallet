@@ -9,6 +9,22 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="General"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+
+    <Button
+        android:id="@+id/btn_manage_budgets"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Manage Categories &amp; Budgets"
+        app:icon="@drawable/ic_settings" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
         android:text="@string/theme"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
