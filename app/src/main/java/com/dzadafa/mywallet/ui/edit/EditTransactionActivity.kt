@@ -2,6 +2,7 @@ package com.dzadafa.mywallet.ui.edit
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -10,17 +11,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.MyWalletApplication
-import com.dzadafa.mywallet.R
+import com.dzadafa.mywallet.data.Budget
+import com.dzadafa.mywallet.data.BudgetRepository
 import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.databinding.ActivityEditTransactionBinding
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class EditTransactionActivity : AppCompatActivity() {
@@ -28,13 +29,14 @@ class EditTransactionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEditTransactionBinding
     private val selectedDate = Calendar.getInstance()
     private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    
+
     private var transactionId: Int = 0
     private var currentTransaction: Transaction? = null
-    
+
     private val viewModel: EditTransactionViewModel by viewModels {
         EditTransactionViewModelFactory(
-            (application as MyWalletApplication).transactionRepository
+            (application as MyWalletApplication).transactionRepository,
+            (application as MyWalletApplication).budgetRepository
         )
     }
 
@@ -54,9 +56,9 @@ class EditTransactionActivity : AppCompatActivity() {
         }
 
         setupDatePicker()
-        
+
         viewModel.loadTransaction(transactionId)
-        
+
         viewModel.transaction.observe(this) { transaction ->
             if (transaction != null) {
                 currentTransaction = transaction
@@ -64,10 +66,21 @@ class EditTransactionActivity : AppCompatActivity() {
             }
         }
 
+        viewModel.allBudgets.observe(this) { budgets ->
+            val categories = budgets.map { it.category }
+            val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, categories)
+            binding.etCategory.setAdapter(adapter)
+
+            currentTransaction?.let { txn ->
+                binding.etCategory.setText(txn.category, false) 
+
+            }
+        }
+
         binding.btnSaveChanges.setOnClickListener {
             saveChanges()
         }
-        
+
         binding.btnDeleteTransaction.setOnClickListener {
             showDeleteConfirmationDialog()
         }
@@ -83,7 +96,7 @@ class EditTransactionActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
+
     private fun deleteItemAndFinish() {
         currentTransaction?.let {
             viewModel.deleteTransaction(it)
@@ -95,8 +108,8 @@ class EditTransactionActivity : AppCompatActivity() {
     private fun populateUi(txn: Transaction) {
         binding.etDescription.setText(txn.description)
         binding.etAmount.setText(txn.amount.toString())
-        binding.etCategory.setText(txn.category)
-        
+        binding.etCategory.setText(txn.category, false) 
+
         if (txn.type == "income") {
             binding.rbIncome.isChecked = true
         } else {
@@ -125,7 +138,7 @@ class EditTransactionActivity : AppCompatActivity() {
             ).show()
         }
     }
-    
+
     private fun updateDateEditText() {
         binding.etDate.setText(displayDateFormat.format(selectedDate.time))
     }
@@ -148,7 +161,8 @@ class EditTransactionActivity : AppCompatActivity() {
             type = type,
             description = description,
             amount = amount,
-            category = category.replaceFirstChar { it.uppercase() },
+            category = category, 
+
             date = date
         )
 
@@ -156,7 +170,7 @@ class EditTransactionActivity : AppCompatActivity() {
         binding.btnSaveChanges.text = "Saving..."
 
         viewModel.saveChanges(updatedTransaction)
-        
+
         Toast.makeText(applicationContext, "Changes saved!", Toast.LENGTH_SHORT).show()
         finish()
     }
@@ -167,23 +181,28 @@ class EditTransactionActivity : AppCompatActivity() {
     }
 }
 
-class EditTransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
-    
+class EditTransactionViewModel(
+    private val repository: TransactionRepository,
+    budgetRepository: BudgetRepository
+) : ViewModel() {
+
     private val _transaction = MutableLiveData<Transaction?>()
     val transaction: LiveData<Transaction?> = _transaction
+
+    val allBudgets: LiveData<List<Budget>> = budgetRepository.allBudgets.asLiveData()
 
     fun loadTransaction(id: Int) {
         viewModelScope.launch {
             _transaction.value = repository.getTransactionById(id)
         }
     }
-    
+
     fun saveChanges(transaction: Transaction) {
         viewModelScope.launch {
             repository.update(transaction)
         }
     }
-    
+
     fun deleteTransaction(transaction: Transaction) {
         viewModelScope.launch {
             repository.delete(transaction)
@@ -192,12 +211,13 @@ class EditTransactionViewModel(private val repository: TransactionRepository) : 
 }
 
 class EditTransactionViewModelFactory(
-    private val repository: TransactionRepository
+    private val repository: TransactionRepository,
+    private val budgetRepository: BudgetRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EditTransactionViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return EditTransactionViewModel(repository) as T
+            return EditTransactionViewModel(repository, budgetRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

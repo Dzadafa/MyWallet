@@ -27,6 +27,8 @@ class TransactionsFragment : Fragment() {
     private var _binding: FragmentTransactionsBinding? = null
     private val binding get() = _binding!!
 
+    private var availableCategories: List<String> = emptyList()
+
     private val viewModel: TransactionsViewModel by viewModels {
         MyWalletViewModelFactory(
             (requireActivity().application as MyWalletApplication).transactionRepository,
@@ -81,28 +83,16 @@ class TransactionsFragment : Fragment() {
             .setTitle(getString(R.string.select_filter))
             .setItems(filterNames) { _, which ->
                 val selectedFilter = filters[which]
-                
-                if (selectedFilter == FilterManager.FilterType.THIS_MONTH) {
-                     val cal = Calendar.getInstance()
-                     FilterManager.saveFilterState(
-                        requireContext(), 
-                        FilterManager.FilterType.THIS_MONTH, 
-                        cal.get(Calendar.YEAR), 
-                        cal.get(Calendar.MONTH)
-                    )
-                    updateFilterButtonText()
-                    viewModel.forceFilterUpdate()
-                } else {
-                    val cal = Calendar.getInstance()
-                    FilterManager.saveFilterState(
-                        requireContext(), 
-                        selectedFilter, 
-                        cal.get(Calendar.YEAR), 
-                        cal.get(Calendar.MONTH)
-                    )
-                    updateFilterButtonText()
-                    viewModel.forceFilterUpdate()
-                }
+
+                val cal = Calendar.getInstance()
+                FilterManager.saveFilterState(
+                    requireContext(), 
+                    selectedFilter, 
+                    cal.get(Calendar.YEAR), 
+                    cal.get(Calendar.MONTH)
+                )
+                updateFilterButtonText()
+                viewModel.forceFilterUpdate()
             }
             .show()
     }
@@ -143,21 +133,27 @@ class TransactionsFragment : Fragment() {
             binding.tvNoExpenses.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }
 
+        viewModel.allBudgets.observe(viewLifecycleOwner) { budgets ->
+            availableCategories = budgets.map { it.category }
+        }
+
         viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+
         }
     }
 
     private fun showAddTransactionDialog() {
         val dialogBinding = DialogAddTransactionBinding.inflate(layoutInflater)
-        
-        val categories = listOf("Food", "Transport", "Entertainment", "Bills", "Shopping", "Health", "Education", "Other")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categories)
+
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, availableCategories)
         dialogBinding.etCategory.setAdapter(adapter)
+
+        dialogBinding.etCategory.setOnClickListener { dialogBinding.etCategory.showDropDown() }
 
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Add Transaction")
             .setView(dialogBinding.root)
-            .setPositiveButton("Add", null) 
+            .setPositiveButton("Add", null)
             .setNegativeButton("Cancel", null)
             .create()
 
