@@ -27,7 +27,9 @@ class TransactionsFragment : Fragment() {
     private var _binding: FragmentTransactionsBinding? = null
     private val binding get() = _binding!!
 
-    private var availableCategories: List<String> = emptyList()
+    private var budgetCategories: List<String> = emptyList()
+
+    private val incomeCategories = listOf("Salary", "Allowance", "Bonus", "Investment", "Gift", "Other")
 
     private val viewModel: TransactionsViewModel by viewModels {
         MyWalletViewModelFactory(
@@ -134,7 +136,7 @@ class TransactionsFragment : Fragment() {
         }
 
         viewModel.allBudgets.observe(viewLifecycleOwner) { budgets ->
-            availableCategories = budgets.map { it.category }
+            budgetCategories = budgets.map { it.category }
         }
 
         viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
@@ -145,8 +147,19 @@ class TransactionsFragment : Fragment() {
     private fun showAddTransactionDialog() {
         val dialogBinding = DialogAddTransactionBinding.inflate(layoutInflater)
 
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, availableCategories)
-        dialogBinding.etCategory.setAdapter(adapter)
+        fun updateCategoryAdapter(isExpense: Boolean) {
+            val list = if (isExpense) budgetCategories else incomeCategories
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, list)
+            dialogBinding.etCategory.setAdapter(adapter)
+        }
+
+        updateCategoryAdapter(dialogBinding.rbExpense.isChecked)
+
+        dialogBinding.rgType.setOnCheckedChangeListener { _, checkedId ->
+            dialogBinding.etCategory.text = null 
+
+            updateCategoryAdapter(checkedId == R.id.rb_expense)
+        }
 
         dialogBinding.etCategory.setOnClickListener { dialogBinding.etCategory.showDropDown() }
 
