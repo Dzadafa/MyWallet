@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.MyWalletApplication
+import com.dzadafa.mywallet.R
 import com.dzadafa.mywallet.data.Budget
 import com.dzadafa.mywallet.data.BudgetRepository
 import com.dzadafa.mywallet.data.Transaction
@@ -32,6 +33,9 @@ class EditTransactionActivity : AppCompatActivity() {
 
     private var transactionId: Int = 0
     private var currentTransaction: Transaction? = null
+
+    private var budgetCategories: List<String> = emptyList()
+    private val incomeCategories = listOf("Salary", "Allowance", "Bonus", "Investment", "Gift", "Other")
 
     private val viewModel: EditTransactionViewModel by viewModels {
         EditTransactionViewModelFactory(
@@ -56,6 +60,7 @@ class EditTransactionActivity : AppCompatActivity() {
         }
 
         setupDatePicker()
+        setupTypeChangeListener()
 
         viewModel.loadTransaction(transactionId)
 
@@ -67,13 +72,10 @@ class EditTransactionActivity : AppCompatActivity() {
         }
 
         viewModel.allBudgets.observe(this) { budgets ->
-            val categories = budgets.map { it.category }
-            val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, categories)
-            binding.etCategory.setAdapter(adapter)
+            budgetCategories = budgets.map { it.category }
 
-            currentTransaction?.let { txn ->
-                binding.etCategory.setText(txn.category, false) 
-
+            if (binding.rbExpense.isChecked) {
+                updateCategoryAdapter(isExpense = true)
             }
         }
 
@@ -84,6 +86,22 @@ class EditTransactionActivity : AppCompatActivity() {
         binding.btnDeleteTransaction.setOnClickListener {
             showDeleteConfirmationDialog()
         }
+    }
+
+    private fun setupTypeChangeListener() {
+        binding.rgType.setOnCheckedChangeListener { _, checkedId ->
+
+            if (binding.etCategory.hasFocus()) {
+                 binding.etCategory.text = null
+            }
+            updateCategoryAdapter(checkedId == R.id.rb_expense)
+        }
+    }
+
+    private fun updateCategoryAdapter(isExpense: Boolean) {
+        val list = if (isExpense) budgetCategories else incomeCategories
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, list)
+        binding.etCategory.setAdapter(adapter)
     }
 
     private fun showDeleteConfirmationDialog() {
@@ -108,13 +126,16 @@ class EditTransactionActivity : AppCompatActivity() {
     private fun populateUi(txn: Transaction) {
         binding.etDescription.setText(txn.description)
         binding.etAmount.setText(txn.amount.toString())
-        binding.etCategory.setText(txn.category, false) 
 
         if (txn.type == "income") {
             binding.rbIncome.isChecked = true
+            updateCategoryAdapter(isExpense = false)
         } else {
             binding.rbExpense.isChecked = true
+            updateCategoryAdapter(isExpense = true)
         }
+
+        binding.etCategory.setText(txn.category, false) 
 
         selectedDate.time = txn.date
         updateDateEditText()
@@ -161,8 +182,7 @@ class EditTransactionActivity : AppCompatActivity() {
             type = type,
             description = description,
             amount = amount,
-            category = category, 
-
+            category = category,
             date = date
         )
 
