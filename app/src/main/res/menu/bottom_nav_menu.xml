@@ -9,6 +9,10 @@
         android:icon="@drawable/ic_transactions"
         android:title="@string/title_transactions" />
     <item
+        android:id="@+id/navigation_budget"
+        android:icon="@drawable/ic_budget"
+        android:title="Budget" />
+    <item
         android:id="@+id/navigation_wishlist"
         android:icon="@drawable/ic_wishlist"
         android:title="@string/title_wishlist" />
