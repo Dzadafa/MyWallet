@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="8dp"
             android:layout_marginTop="12dp"
-            android:progressDrawable="@drawable/widget_background"
+            android:progressDrawable="@drawable/bg_progress_bar"
             android:progressTint="@color/income_green"
             tools:progress="60"
             app:layout_constraintTop_toBottomOf="@id/tv_category_name" />
