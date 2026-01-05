@@ -21,7 +21,6 @@ class MyWalletViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TransactionsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            
             return TransactionsViewModel(transactionRepository, budgetRepository, application) as T
         }
         if (modelClass.isAssignableFrom(WishlistViewModel::class.java)) {
@@ -32,10 +31,10 @@ class MyWalletViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return DashboardViewModel(transactionRepository, application) as T
         }
-        
         if (modelClass.isAssignableFrom(BudgetViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return BudgetViewModel(budgetRepository, application) as T
+
+            return BudgetViewModel(budgetRepository, transactionRepository, application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

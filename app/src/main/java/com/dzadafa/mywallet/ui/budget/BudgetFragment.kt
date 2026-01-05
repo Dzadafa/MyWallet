@@ -1,79 +1,91 @@
 package com.dzadafa.mywallet.ui.budget
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dzadafa.mywallet.MyWalletApplication
 import com.dzadafa.mywallet.MyWalletViewModelFactory
 import com.dzadafa.mywallet.adapter.BudgetAdapter
 import com.dzadafa.mywallet.data.Budget
-import com.dzadafa.mywallet.databinding.ActivityManageBudgetsBinding
 import com.dzadafa.mywallet.databinding.DialogAddBudgetBinding
+import com.dzadafa.mywallet.databinding.FragmentBudgetBinding
 
-class ManageBudgetsActivity : AppCompatActivity() {
+class BudgetFragment : Fragment() {
 
-    private lateinit var binding: ActivityManageBudgetsBinding
+    private var _binding: FragmentBudgetBinding? = null
+    private val binding get() = _binding!!
+
     private val viewModel: BudgetViewModel by viewModels {
         MyWalletViewModelFactory(
-            (application as MyWalletApplication).transactionRepository,
-            (application as MyWalletApplication).wishlistRepository,
-            (application as MyWalletApplication).budgetRepository,
-            application
+            (requireActivity().application as MyWalletApplication).transactionRepository,
+            (requireActivity().application as MyWalletApplication).wishlistRepository,
+            (requireActivity().application as MyWalletApplication).budgetRepository,
+            requireActivity().application
         )
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityManageBudgetsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentBudgetBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Manage Budgets"
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        
+
         binding.fabAddBudget.setOnClickListener {
             showAddEditDialog(null)
         }
 
-        viewModel.toastMessage.observe(this) { msg ->
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        viewModel.toastMessage.observe(viewLifecycleOwner) { msg ->
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun setupRecyclerView() {
-        val adapter = BudgetAdapter(
-            onEditClick = { budget -> showAddEditDialog(budget) },
-            onDeleteClick = { budget -> showDeleteDialog(budget) }
-        )
-        binding.rvBudgets.layoutManager = LinearLayoutManager(this)
+        val adapter = BudgetAdapter { budget -> 
+            showAddEditDialog(budget) 
+        }
+
+        binding.rvBudgets.layoutManager = LinearLayoutManager(context)
         binding.rvBudgets.adapter = adapter
 
-        viewModel.allBudgets.observe(this) { list ->
+        viewModel.budgetList.observe(viewLifecycleOwner) { list ->
             adapter.submitList(list)
+            binding.tvEmptyBudget.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
     private fun showAddEditDialog(budget: Budget?) {
         val dialogBinding = DialogAddBudgetBinding.inflate(layoutInflater)
-        
+
         if (budget != null) {
             dialogBinding.etCategory.setText(budget.category)
             dialogBinding.etCategory.isEnabled = false 
+
             dialogBinding.etLimit.setText(budget.limitAmount.toInt().toString())
         }
 
-        val title = if (budget == null) "New Category" else "Edit Limit"
+        val title = if (budget == null) "New Budget Category" else "Edit Budget Limit"
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(title)
             .setView(dialogBinding.root)
             .setPositiveButton("Save", null)
             .setNegativeButton("Cancel", null)
+            .setNeutralButton(if (budget != null) "Delete" else null) { _, _ ->
+                if (budget != null) showDeleteDialog(budget)
+            }
             .create()
 
         dialog.setOnShowListener {
@@ -90,7 +102,7 @@ class ManageBudgetsActivity : AppCompatActivity() {
                     }
                     dialog.dismiss()
                 } else {
-                    Toast.makeText(this, "Please check your input", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Please check your input", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -98,16 +110,16 @@ class ManageBudgetsActivity : AppCompatActivity() {
     }
 
     private fun showDeleteDialog(budget: Budget) {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(requireContext())
             .setTitle("Delete Category")
-            .setMessage("Delete '${budget.category}'? This will not delete transactions, but the category won't be selectable anymore.")
+            .setMessage("Delete '${budget.category}'? This will remove the budget tracking for this category.")
             .setPositiveButton("Delete") { _, _ -> viewModel.delete(budget) }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressedDispatcher.onBackPressed()
-        return true
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
