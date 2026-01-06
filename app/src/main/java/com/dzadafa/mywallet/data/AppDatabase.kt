@@ -7,8 +7,9 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import java.util.Calendar
 
-@Database(entities = [Transaction::class, WishlistItem::class, Budget::class], version = 2, exportSchema = false)
+@Database(entities = [Transaction::class, WishlistItem::class, Budget::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -27,6 +28,28 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+
+                val cal = Calendar.getInstance()
+                val currentYear = cal.get(Calendar.YEAR)
+                val currentMonth = cal.get(Calendar.MONTH)
+
+                db.execSQL("ALTER TABLE `budgets` ADD COLUMN `year` INTEGER NOT NULL DEFAULT $currentYear")
+                db.execSQL("ALTER TABLE `budgets` ADD COLUMN `month` INTEGER NOT NULL DEFAULT $currentMonth")
+
+                db.execSQL("DROP INDEX IF EXISTS `index_budgets_category`")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_budgets_category_year_month` ON `budgets` (`category`, `year`, `month`)")
+            }
+        }
+
+        private val MIGRATION_1_3 = object : Migration(1, 3) {
+             override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `budgets` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category` TEXT NOT NULL, `limitAmount` REAL NOT NULL, `year` INTEGER NOT NULL, `month` INTEGER NOT NULL)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_budgets_category_year_month` ON `budgets` (`category`, `year`, `month`)")
+             }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -34,7 +57,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "my_wallet_database"
                 )
-                .addMigrations(MIGRATION_1_2) 
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_1_3) 
+
                 .build()
                 INSTANCE = instance
                 instance

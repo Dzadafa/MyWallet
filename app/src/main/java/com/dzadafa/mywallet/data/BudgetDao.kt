@@ -10,14 +10,21 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BudgetDao {
-    @Query("SELECT * FROM budgets ORDER BY category ASC")
-    fun getAllBudgets(): Flow<List<Budget>>
 
-    @Query("SELECT * FROM budgets WHERE category = :category LIMIT 1")
-    suspend fun getBudgetByCategory(category: String): Budget?
+    @Query("SELECT * FROM budgets WHERE year = :year AND month = :month ORDER BY category ASC")
+    fun getBudgetsForMonth(year: Int, month: Int): Flow<List<Budget>>
+
+    @Query("SELECT * FROM budgets WHERE year = :year AND month = :month")
+    suspend fun getBudgetsForMonthSync(year: Int, month: Int): List<Budget>
+
+    @Query("SELECT * FROM budgets WHERE (year < :year) OR (year = :year AND month < :month) ORDER BY year DESC, month DESC LIMIT 1")
+    suspend fun getLatestBudgetBefore(year: Int, month: Int): Budget?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(budget: Budget)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(budgets: List<Budget>)
 
     @Update
     suspend fun update(budget: Budget)
