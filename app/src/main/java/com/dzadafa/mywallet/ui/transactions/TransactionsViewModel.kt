@@ -24,6 +24,7 @@ import com.dzadafa.mywallet.data.Transaction
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.utils.Utils
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Date
 
 class TransactionsViewModel(
@@ -35,8 +36,10 @@ class TransactionsViewModel(
     private val rawTransactions: LiveData<List<Transaction>> = repository.allTransactions.asLiveData()
     private val _filterTrigger = MutableLiveData(Unit)
 
-    
-    val allBudgets: LiveData<List<Budget>> = budgetRepository.allBudgets.asLiveData()
+    val allBudgets: LiveData<List<Budget>> = budgetRepository.getBudgetsForMonth(
+        Calendar.getInstance().get(Calendar.YEAR),
+        Calendar.getInstance().get(Calendar.MONTH)
+    ).asLiveData()
 
     val incomeList: LiveData<List<Transaction>> = rawTransactions.map { transactions ->
         filterAndSort(transactions, TransactionType.INCOME)
@@ -51,7 +54,7 @@ class TransactionsViewModel(
 
     init {
         _filterTrigger.observeForever {
-            
+
         }
     }
 
@@ -61,7 +64,6 @@ class TransactionsViewModel(
     }
 
     fun forceFilterUpdate() {
-        
         _filterTrigger.value = Unit
     }
 
@@ -92,12 +94,16 @@ class TransactionsViewModel(
             repository.insert(newTransaction)
             _toastMessage.postValue("Transaction added!")
             sendTransactionNotification(newTransaction)
+
+            val cal = Calendar.getInstance()
+            cal.time = date
+            budgetRepository.ensureBudgetsExistForMonth(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
         }
     }
 
     private fun sendTransactionNotification(transaction: Transaction) {
         val context = getApplication<Application>().applicationContext
-        
+
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.dzadafa.mywallet.FilterManager
 import com.dzadafa.mywallet.data.Budget
@@ -30,59 +31,87 @@ class BudgetViewModel(
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> = _toastMessage
 
-    val budgetList: LiveData<List<BudgetWithUsage>> = combine(
-        budgetRepository.allBudgets,
-        transactionRepository.allTransactions
-    ) { budgets, transactions ->
+    private fun getFilterYearMonth(): Pair<Int, Int> {
+        val (type, year, month) = FilterManager.getFilterState(getApplication())
 
-        val (filterType, year, month) = FilterManager.getFilterState(getApplication())
         val cal = Calendar.getInstance()
+        return if (type == FilterManager.FilterType.THIS_MONTH) {
 
-        val filteredTransactions = transactions.filter { txn ->
-            if (txn.type != "expense") return@filter false
+             Pair(year, month)
+        } else {
 
-            cal.time = txn.date
-            val txnYear = cal.get(Calendar.YEAR)
-            val txnMonth = cal.get(Calendar.MONTH)
+             Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+        }
+    }
 
-            when (filterType) {
-                FilterManager.FilterType.ALL_TIME -> true
-                FilterManager.FilterType.THIS_YEAR -> txnYear == year
-                else -> txnYear == year && txnMonth == month 
+    private val _refreshTrigger = MutableLiveData(Unit)
 
+    val budgetList: LiveData<List<BudgetWithUsage>> = _refreshTrigger.switchMap {
+        val (year, month) = getFilterYearMonth()
+
+        viewModelScope.launch {
+            budgetRepository.ensureBudgetsExistForMonth(year, month)
+        }
+
+        combine(
+            budgetRepository.getBudgetsForMonth(year, month),
+            transactionRepository.allTransactions
+        ) { budgets, transactions ->
+
+            val monthlyTransactions = transactions.filter { txn ->
+                if (txn.type != "expense") return@filter false
+                val cal = Calendar.getInstance()
+                cal.time = txn.date
+                cal.get(Calendar.YEAR) == year && cal.get(Calendar.MONTH) == month
             }
-        }
 
-        budgets.map { budget ->
-            val spent = filteredTransactions
-                .filter { it.category.equals(budget.category, ignoreCase = true) }
-                .sumOf { it.amount }
+            budgets.map { budget ->
+                val spent = monthlyTransactions
+                    .filter { it.category.equals(budget.category, ignoreCase = true) }
+                    .sumOf { it.amount }
 
-            val percent = if (budget.limitAmount > 0) {
-                (spent / budget.limitAmount * 100).toInt()
-            } else 0
+                val percent = if (budget.limitAmount > 0) {
+                    (spent / budget.limitAmount * 100).toInt()
+                } else 0
 
-            BudgetWithUsage(
-                budget = budget,
-                spent = spent,
-                progressPercent = percent,
-                isOverBudget = spent > budget.limitAmount
-            )
-        }
-    }.asLiveData()
+                BudgetWithUsage(
+                    budget = budget,
+                    spent = spent,
+                    progressPercent = percent,
+                    isOverBudget = spent > budget.limitAmount
+                )
+            }
+        }.asLiveData()
+    }
+
+    init {
+        refresh()
+    }
+
+    fun refresh() {
+        _refreshTrigger.value = Unit
+    }
 
     fun insert(category: String, limit: Double) {
-        if (category.isBlank()) {
-            _toastMessage.value = "Category name cannot be empty"
-            return
-        }
+        if (category.isBlank()) return
+
+        val (year, month) = getFilterYearMonth()
+        val formattedCategory = category.trim().replaceFirstChar { it.uppercase() }
+
         viewModelScope.launch {
             try {
-                val formattedCategory = category.trim().replaceFirstChar { it.uppercase() }
-                budgetRepository.insert(Budget(category = formattedCategory, limitAmount = limit))
-                _toastMessage.postValue("Category added")
+                budgetRepository.insert(
+                    Budget(
+                        category = formattedCategory, 
+                        limitAmount = limit,
+                        year = year, 
+                        month = month
+                    )
+                )
+                _toastMessage.postValue("Category added for this month")
+                refresh()
             } catch (e: Exception) {
-                _toastMessage.postValue("Category might already exist")
+                _toastMessage.postValue("Category already exists")
             }
         }
     }
@@ -97,7 +126,7 @@ class BudgetViewModel(
     fun delete(budget: Budget) {
         viewModelScope.launch {
             budgetRepository.delete(budget)
-            _toastMessage.postValue("Deleted")
+            _toastMessage.postValue("Deleted from this month")
         }
     }
 }

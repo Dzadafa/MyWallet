@@ -73,7 +73,6 @@ class EditTransactionActivity : AppCompatActivity() {
 
         viewModel.allBudgets.observe(this) { budgets ->
             budgetCategories = budgets.map { it.category }
-
             if (binding.rbExpense.isChecked) {
                 updateCategoryAdapter(isExpense = true)
             }
@@ -90,7 +89,6 @@ class EditTransactionActivity : AppCompatActivity() {
 
     private fun setupTypeChangeListener() {
         binding.rgType.setOnCheckedChangeListener { _, checkedId ->
-
             if (binding.etCategory.hasFocus()) {
                  binding.etCategory.text = null
             }
@@ -209,7 +207,10 @@ class EditTransactionViewModel(
     private val _transaction = MutableLiveData<Transaction?>()
     val transaction: LiveData<Transaction?> = _transaction
 
-    val allBudgets: LiveData<List<Budget>> = budgetRepository.allBudgets.asLiveData()
+    val allBudgets: LiveData<List<Budget>> = budgetRepository.getBudgetsForMonth(
+        Calendar.getInstance().get(Calendar.YEAR),
+        Calendar.getInstance().get(Calendar.MONTH)
+    ).asLiveData()
 
     fun loadTransaction(id: Int) {
         viewModelScope.launch {
