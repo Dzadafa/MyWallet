@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import com.dzadafa.mywallet.data.AppDatabase
 import com.dzadafa.mywallet.data.BudgetRepository
+import com.dzadafa.mywallet.data.InvestmentRepository
 import com.dzadafa.mywallet.data.TransactionRepository
 import com.dzadafa.mywallet.data.WishlistRepository
 
@@ -22,6 +23,8 @@ class MyWalletApplication : Application() {
     val transactionRepository by lazy { TransactionRepository(database.transactionDao()) }
     val wishlistRepository by lazy { WishlistRepository(database.wishlistDao()) }
     val budgetRepository by lazy { BudgetRepository(database.budgetDao()) }
+    // New Repository
+    val investmentRepository by lazy { InvestmentRepository(database.investmentDao()) }
 
     override fun onCreate() {
         super.onCreate()
