@@ -54,4 +54,13 @@
     <string name="enable_daily_reminders">Enable Daily Reminders</string>
     <string name="reminder_time">Reminder Time</string>
     <string name="default_reminder_time">21:00</string>
+
+    <string name="title_investment">Investments</string>
+    <string name="total_portfolio_value">Total Value</string>
+    <string name="total_profit_loss">Total Profit/Loss</string>
+    <string name="add_investment">Add Investment</string>
+    <string name="investment_name">Asset Name (e.g. Bitcoin)</string>
+    <string name="investment_type">Type (Crypto, Stock, Gold)</string>
+    <string name="current_price">Current Price (Per Unit)</string>
+    <string name="target_dca">Monthly DCA Target (Rp)</string>
 </resources>

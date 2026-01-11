@@ -13,6 +13,10 @@
         android:icon="@drawable/ic_budget"
         android:title="Budget" />
     <item
+        android:id="@+id/navigation_investment"
+        android:icon="@drawable/ic_investment"
+        android:title="Invest" />
+    <item
         android:id="@+id/navigation_wishlist"
         android:icon="@drawable/ic_wishlist"
         android:title="@string/title_wishlist" />

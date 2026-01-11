@@ -33,4 +33,9 @@
         android:label="@string/title_settings"
         tools:layout="@layout/fragment_settings" />
 
+    <fragment
+        android:id="@+id/navigation_investment"
+        android:name="com.dzadafa.mywallet.ui.investment.InvestmentFragment"
+        android:label="Investments"
+        tools:layout="@layout/fragment_investment" />
 </navigation>
