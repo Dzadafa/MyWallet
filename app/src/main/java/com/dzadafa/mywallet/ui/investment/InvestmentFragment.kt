@@ -57,8 +57,10 @@ class InvestmentFragment : Fragment() {
 
     private fun setupRecyclerView() {
         val adapter = InvestmentAdapter { investment ->
-
-            Toast.makeText(context, "Clicked ${investment.name}", Toast.LENGTH_SHORT).show()
+             val intent = android.content.Intent(requireContext(), InvestmentDetailActivity::class.java).apply {
+                 putExtra("INVESTMENT_ID", investment.id)
+             }
+             startActivity(intent)
         }
         binding.rvInvestments.layoutManager = LinearLayoutManager(context)
         binding.rvInvestments.adapter = adapter

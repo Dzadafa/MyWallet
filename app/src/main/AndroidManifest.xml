@@ -111,5 +111,10 @@
             android:exported="false"
             android:theme="@style/Theme.MyWallet" />
 
+        <activity
+            android:name=".ui.investment.InvestmentDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyWallet" />
+
         </application>
 </manifest>

@@ -18,4 +18,8 @@ object Utils {
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         return sdf.format(date)
     }
+
+    fun formatDecimal(value: Double): String {
+        return String.format("%.4f", value).trimEnd('0').trimEnd('.')
+    }
 }
