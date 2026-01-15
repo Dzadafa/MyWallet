@@ -10,6 +10,7 @@ import com.dzadafa.mywallet.data.InvestmentLog
 import com.dzadafa.mywallet.data.InvestmentRepository
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Date
 
 class InvestmentDetailViewModel(
@@ -23,11 +24,41 @@ class InvestmentDetailViewModel(
     private val _logs = MutableLiveData<List<InvestmentLog>>()
     val logs: LiveData<List<InvestmentLog>> = _logs
 
+    private val _dcaProgress = MutableLiveData<Pair<Double, Double>>()
+    val dcaProgress: LiveData<Pair<Double, Double>> = _dcaProgress
+
     fun loadInvestment(id: Int) {
         viewModelScope.launch {
             _investment.value = repository.getInvestmentById(id)
             repository.getLogsForInvestment(id).collectLatest {
                 _logs.value = it
+            }
+        }
+        loadDcaProgress(id)
+    }
+
+    private fun loadDcaProgress(id: Int) {
+        viewModelScope.launch {
+            val inv = repository.getInvestmentById(id) ?: return@launch
+            if (inv.targetMonthlyDca <= 0) {
+                _dcaProgress.value = Pair(0.0, 0.0)
+                return@launch
+            }
+
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            val startOfMonth = calendar.time
+
+            calendar.add(Calendar.MONTH, 1)
+            calendar.add(Calendar.SECOND, -1)
+            val endOfMonth = calendar.time
+
+            repository.getMonthlyDcaProgress(id, startOfMonth, endOfMonth).collectLatest { totalBought ->
+                val current = totalBought ?: 0.0
+                _dcaProgress.value = Pair(current, inv.targetMonthlyDca)
             }
         }
     }
@@ -63,7 +94,6 @@ class InvestmentDetailViewModel(
     }
 
     private suspend fun recalculateInvestmentState(investmentId: Int, currentPrice: Double) {
-
         val allLogs = repository.getLogsForInvestmentSync(investmentId)
 
         var newHoldings = 0.0
@@ -74,18 +104,17 @@ class InvestmentDetailViewModel(
             if (log.type == "BUY") {
                 totalCost += log.amountInvested
                 newHoldings += log.units
-            } else { 
-
+            } else {
                 newHoldings -= log.units
                 if (newHoldings < 0) newHoldings = 0.0
-
+                
                 if (newHoldings > 0 && newAvgPrice > 0) {
                      totalCost = newHoldings * newAvgPrice
                 } else {
                      totalCost = 0.0
                 }
             }
-
+            
             if (newHoldings > 0) {
                 newAvgPrice = totalCost / newHoldings
             } else {

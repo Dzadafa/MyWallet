@@ -59,35 +59,55 @@ class InvestmentDetailActivity : AppCompatActivity() {
         setupRecyclerView()
         setupListeners()
         viewModel.loadInvestment(investmentId)
-
+        
         viewModel.investment.observe(this) { inv ->
             if (inv != null) {
                 supportActionBar?.title = inv.name
                 binding.tvTotalHoldings.text = "${Utils.formatDecimal(inv.amountHeld)} ${inv.type}"
                 binding.tvCurrentValue.text = "≈ ${Utils.formatAsRupiah(inv.getCurrentValue())}"
                 binding.tvAvgPrice.text = Utils.formatAsRupiah(inv.averageBuyPrice)
-
+                
                 val pl = inv.getProfitLossPercentage()
                 val plStr = String.format("%.2f%%", pl)
                 binding.tvUnrealizedPl.text = if (pl >= 0) "+$plStr" else plStr
-
+                
                 val color = if (pl >= 0) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
                 binding.tvUnrealizedPl.setTextColor(color)
             } else {
-
                 finish()
+            }
+        }
+
+        viewModel.dcaProgress.observe(this) { (current, target) ->
+            if (target > 0) {
+                binding.cardDca.visibility = android.view.View.VISIBLE
+                
+                val percent = ((current / target) * 100).toInt()
+                binding.pbDca.progress = percent.coerceAtMost(100)
+                
+                binding.tvDcaStatus.text = "${Utils.formatAsRupiah(current)} / ${Utils.formatAsRupiah(target)}"
+                
+                if (current >= target) {
+                    binding.tvDcaMessage.text = "Goal reached for this month! 🎉"
+                    binding.tvDcaMessage.setTextColor(Color.parseColor("#4CAF50"))
+                } else {
+                    val remaining = target - current
+                    binding.tvDcaMessage.text = "${Utils.formatAsRupiah(remaining)} left to invest this month"
+                    binding.tvDcaMessage.setTextColor(Color.GRAY)
+                }
+            } else {
+                binding.cardDca.visibility = android.view.View.GONE
             }
         }
     }
 
     private fun setupRecyclerView() {
-
         val adapter = InvestmentLogAdapter { log ->
             showDeleteLogConfirmation(log)
         }
         binding.rvHistory.layoutManager = LinearLayoutManager(this)
         binding.rvHistory.adapter = adapter
-
+        
         viewModel.logs.observe(this) { list ->
             adapter.submitList(list)
         }
@@ -132,7 +152,7 @@ class InvestmentDetailActivity : AppCompatActivity() {
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         input.hint = "New Price (Rp)"
-
+        
         val container = FrameLayout(this)
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT, 
@@ -179,9 +199,9 @@ class InvestmentDetailActivity : AppCompatActivity() {
         val dialogBinding = DialogAddInvestmentTransactionBinding.inflate(layoutInflater)
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-
+        
         dialogBinding.etDate.setText(dateFormat.format(calendar.time))
-
+        
         val watcher = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val units = dialogBinding.etUnits.text.toString().toDoubleOrNull() ?: 0.0
@@ -207,7 +227,7 @@ class InvestmentDetailActivity : AppCompatActivity() {
             .setPositiveButton("Confirm") { _, _ ->
                 val units = dialogBinding.etUnits.text.toString().toDoubleOrNull()
                 val price = dialogBinding.etPricePerUnit.text.toString().toDoubleOrNull()
-
+                
                 if (units != null && price != null && units > 0) {
                     viewModel.addTransaction(type, calendar.time, units, price)
                 } else {
