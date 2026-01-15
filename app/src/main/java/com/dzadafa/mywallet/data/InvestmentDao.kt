@@ -30,6 +30,9 @@ interface InvestmentDao {
     @Query("SELECT * FROM investment_logs WHERE investmentId = :investmentId ORDER BY date DESC")
     fun getLogsForInvestment(investmentId: Int): Flow<List<InvestmentLog>>
 
+    @Query("SELECT * FROM investment_logs WHERE investmentId = :investmentId ORDER BY date ASC")
+    suspend fun getLogsForInvestmentSync(investmentId: Int): List<InvestmentLog>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: InvestmentLog)
 

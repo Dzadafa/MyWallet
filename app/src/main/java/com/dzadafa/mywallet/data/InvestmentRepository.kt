@@ -16,6 +16,9 @@ class InvestmentRepository(private val dao: InvestmentDao) {
     
     suspend fun insertLog(log: InvestmentLog) = dao.insertLog(log)
     suspend fun deleteLog(log: InvestmentLog) = dao.deleteLog(log)
+    suspend fun getLogsForInvestmentSync(id: Int): List<InvestmentLog> {
+        return dao.getLogsForInvestmentSync(id)
+    }
 
     fun getMonthlyDcaProgress(investmentId: Int, startOfMonth: Date, endOfMonth: Date): Flow<Double?> {
         return dao.getTotalBoughtInRange(investmentId, startOfMonth, endOfMonth)

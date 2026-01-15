@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -19,8 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            tools:text="BUY"
-            tools:textColor="@color/income_green" />
+            tools:text="BUY" />
 
         <TextView
             android:id="@+id/tv_log_date"
@@ -52,4 +52,14 @@
             android:textColor="@color/widget_text_color"
             tools:text="@ Rp 900.000.000" />
     </LinearLayout>
+    
+    <ImageButton
+        android:id="@+id/btn_delete_log"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_delete"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:tint="@color/expense_red" />
+
 </LinearLayout>

@@ -10,7 +10,9 @@ import com.dzadafa.mywallet.data.InvestmentLog
 import com.dzadafa.mywallet.databinding.ItemInvestmentLogBinding
 import com.dzadafa.mywallet.utils.Utils
 
-class InvestmentLogAdapter : ListAdapter<InvestmentLog, InvestmentLogAdapter.LogViewHolder>(LogDiffCallback) {
+class InvestmentLogAdapter(
+    private val onDeleteClick: (InvestmentLog) -> Unit
+) : ListAdapter<InvestmentLog, InvestmentLogAdapter.LogViewHolder>(LogDiffCallback) {
 
     inner class LogViewHolder(private val binding: ItemInvestmentLogBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -18,13 +20,20 @@ class InvestmentLogAdapter : ListAdapter<InvestmentLog, InvestmentLogAdapter.Log
         fun bind(item: InvestmentLog) {
             binding.tvLogType.text = item.type
             binding.tvLogDate.text = Utils.formatDate(item.date)
-            binding.tvLogUnits.text = "${item.units} Units"
+
+            binding.tvLogUnits.text = "${Utils.formatDecimal(item.units)} Units"
             binding.tvLogPrice.text = "@ ${Utils.formatAsRupiah(item.pricePerUnit)}"
 
             if (item.type == "BUY") {
-                binding.tvLogType.setTextColor(Color.parseColor("#4CAF50"))
+                binding.tvLogType.setTextColor(Color.parseColor("#4CAF50")) 
+
             } else {
-                binding.tvLogType.setTextColor(Color.parseColor("#F44336"))
+                binding.tvLogType.setTextColor(Color.parseColor("#F44336")) 
+
+            }
+
+            binding.btnDeleteLog.setOnClickListener {
+                onDeleteClick(item)
             }
         }
     }

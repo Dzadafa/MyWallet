@@ -25,56 +25,82 @@ class InvestmentDetailViewModel(
 
     fun loadInvestment(id: Int) {
         viewModelScope.launch {
-            val data = repository.getInvestmentById(id)
-            _investment.value = data
-
+            _investment.value = repository.getInvestmentById(id)
             repository.getLogsForInvestment(id).collectLatest {
                 _logs.value = it
             }
         }
     }
 
+    fun updatePrice(newPrice: Double) {
+        val currentInv = _investment.value ?: return
+        viewModelScope.launch {
+            val updatedInv = currentInv.copy(currentPrice = newPrice)
+            repository.updateInvestment(updatedInv)
+            _investment.value = updatedInv
+        }
+    }
+
     fun addTransaction(type: String, date: Date, units: Double, pricePerUnit: Double) {
         val currentInv = _investment.value ?: return
-
         viewModelScope.launch {
-
             val totalAmount = units * pricePerUnit
             val log = InvestmentLog(
-                investmentId = currentInv.id,
-                date = date,
-                type = type,
-                amountInvested = totalAmount,
-                units = units,
-                pricePerUnit = pricePerUnit
+                investmentId = currentInv.id, date = date, type = type,
+                amountInvested = totalAmount, units = units, pricePerUnit = pricePerUnit
             )
             repository.insertLog(log)
+            recalculateInvestmentState(currentInv.id, currentInv.currentPrice)
+        }
+    }
 
-            var newAmountHeld = currentInv.amountHeld
-            var newAvgPrice = currentInv.averageBuyPrice
+    fun deleteLog(log: InvestmentLog) {
+        val currentInv = _investment.value ?: return
+        viewModelScope.launch {
+            repository.deleteLog(log)
+            recalculateInvestmentState(currentInv.id, currentInv.currentPrice)
+        }
+    }
 
-            if (type == "BUY") {
+    private suspend fun recalculateInvestmentState(investmentId: Int, currentPrice: Double) {
 
-                val currentTotalCost = currentInv.amountHeld * currentInv.averageBuyPrice
-                val newTotalCost = currentTotalCost + totalAmount
-                newAmountHeld += units
+        val allLogs = repository.getLogsForInvestmentSync(investmentId)
 
-                if (newAmountHeld > 0) {
-                    newAvgPrice = newTotalCost / newAmountHeld
+        var newHoldings = 0.0
+        var totalCost = 0.0
+        var newAvgPrice = 0.0
+
+        for (log in allLogs) {
+            if (log.type == "BUY") {
+                totalCost += log.amountInvested
+                newHoldings += log.units
+            } else { 
+
+                newHoldings -= log.units
+                if (newHoldings < 0) newHoldings = 0.0
+
+                if (newHoldings > 0 && newAvgPrice > 0) {
+                     totalCost = newHoldings * newAvgPrice
+                } else {
+                     totalCost = 0.0
                 }
-            } else {
-
-                newAmountHeld -= units
-                if (newAmountHeld < 0) newAmountHeld = 0.0
             }
 
-            val updatedInv = currentInv.copy(
-                amountHeld = newAmountHeld,
-                averageBuyPrice = newAvgPrice,
+            if (newHoldings > 0) {
+                newAvgPrice = totalCost / newHoldings
+            } else {
+                newAvgPrice = 0.0
+                totalCost = 0.0
+            }
+        }
 
-                currentPrice = pricePerUnit 
-            )
+        val updatedInv = repository.getInvestmentById(investmentId)?.copy(
+            amountHeld = newHoldings,
+            averageBuyPrice = newAvgPrice,
+            currentPrice = currentPrice
+        )
 
+        if (updatedInv != null) {
             repository.updateInvestment(updatedInv)
             _investment.value = updatedInv
         }
@@ -84,6 +110,7 @@ class InvestmentDetailViewModel(
          val currentInv = _investment.value ?: return
          viewModelScope.launch {
              repository.deleteInvestment(currentInv)
+             _investment.value = null
          }
     }
 }
